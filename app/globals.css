@@ -1,26 +1,484 @@
 @import "tailwindcss";
 
+/* ============================================================
+   TAILWIND v4 CSS-FIRST THEME CONFIG
+   ============================================================ */
+
+@theme {
+  /* --- Surfaces --- */
+  --color-bg-base:        #080808;
+  --color-bg-elevated:    #0F0F0F;
+  --color-bg-overlay:     #141414;
+  --color-bg-inset:       #1A1A1A;
+
+  /* --- Borders --- */
+  --color-border-subtle:  #1F1F1F;
+  --color-border-default: #2A2A2A;
+  --color-border-strong:  #3A3A3A;
+
+  /* --- Text --- */
+  --color-text-primary:   #F0F0F0;
+  --color-text-secondary: #888888;
+  --color-text-muted:     #444444;
+  --color-text-mono:      #666666;
+
+  /* --- Accent (max 4x per page) --- */
+  --color-accent:         #4AFF91;
+  --color-accent-dim:     #4AFF9114;
+  --color-accent-border:  #4AFF9130;
+
+  /* --- Semantic status --- */
+  --color-status-live:    #4AFF91;
+  --color-status-wip:     #FFB84A;
+  --color-status-open:    #4AFF91;
+
+  /* --- Fonts --- */
+  --font-sans:  "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono:  "Geist Mono", "Fira Code", ui-monospace, monospace;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+
+  /* --- Spacing (8pt base) --- */
+  --spacing-1:   4px;
+  --spacing-2:   8px;
+  --spacing-3:   12px;
+  --spacing-4:   16px;
+  --spacing-5:   20px;
+  --spacing-6:   24px;
+  --spacing-8:   32px;
+  --spacing-10:  40px;
+  --spacing-12:  48px;
+  --spacing-16:  64px;
+  --spacing-20:  80px;
+  --spacing-24:  96px;
+
+  /* --- Type scale --- */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-lg:   19px;
+  --text-xl:   24px;
+  --text-2xl:  30px;
+  --text-3xl:  38px;
+  --text-hero: 56px;
+
+  /* --- Motion durations --- */
+  --duration-instant: 80ms;
+  --duration-fast:    150ms;
+  --duration-base:    250ms;
+  --duration-slow:    400ms;
+  --duration-crawl:   600ms;
+
+  /* --- Easings --- */
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in:  cubic-bezier(0.4, 0.0, 1, 1);
+  --ease-std: cubic-bezier(0.4, 0.0, 0.2, 1);
+
+  /* --- Radii --- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+}
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES (runtime tokens for JS access)
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --grad-1: linear-gradient(135deg, #1a0533 0%, #0d1f3c 100%);
+  --grad-2: linear-gradient(135deg, #0d1f3c 0%, #0a2818 100%);
+  --grad-3: linear-gradient(135deg, #2d0a1e 0%, #1a0533 100%);
+  --grad-4: linear-gradient(135deg, #0a2818 0%, #1a1a08 100%);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================================
+   DARK THEME RESET & BASE
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background-color: #080808;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #080808;
+  color: #F0F0F0;
+  font-family: var(--font-geist), system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  min-height: 100dvh;
 }
+
+ul, ol {
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+input, textarea {
+  background: none;
+  border: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1px solid #3A3A3A;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A2A;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3A3A3A;
+}
+
+::selection {
+  background-color: #4AFF9130;
+  color: #F0F0F0;
+}
+
+/* ============================================================
+   TYPOGRAPHY UTILITIES
+   ============================================================ */
+
+.font-serif {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.font-mono {
+  font-family: "Geist Mono", "Fira Code", ui-monospace, monospace;
+}
+
+/* ============================================================
+   LAYOUT UTILITIES
+   ============================================================ */
+
+.page-wrapper {
+  max-width: 720px;
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: clamp(24px, 5vw, 80px);
+}
+
+/* ============================================================
+   MOTION SYSTEM
+   ============================================================ */
+
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--duration-slow) var(--ease-out),
+              transform var(--duration-slow) var(--ease-out);
+}
+
+.hover-border {
+  transition: border-color var(--duration-fast) var(--ease-std);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 100ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal-hidden {
+    opacity: 0;
+    transform: none;
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: none;
+    transition: opacity 100ms linear;
+  }
+}
+
+/* ============================================================
+   PROSE — blog & case study body content
+   ============================================================ */
+
+.prose {
+  color: #888888;
+  font-size: 15px;
+  line-height: 1.75;
+  max-width: 65ch;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: #F0F0F0;
+  font-family: "Geist", system-ui, -apple-system, sans-serif;
+  line-height: 1.2;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+}
+
+.prose h1 { font-size: 30px; font-weight: 700; }
+.prose h2 { font-size: 24px; font-weight: 600; }
+.prose h3 { font-size: 19px; font-weight: 500; }
+.prose h4 { font-size: 15px; font-weight: 500; }
+
+.prose p {
+  margin-bottom: 1.25em;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose strong {
+  color: #F0F0F0;
+  font-weight: 600;
+}
+
+.prose em {
+  color: #888888;
+  font-style: italic;
+}
+
+.prose a {
+  color: #F0F0F0;
+  text-decoration: underline;
+  text-decoration-color: #2A2A2A;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+
+.prose a:hover {
+  text-decoration-color: #F0F0F0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.25em;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li {
+  margin-bottom: 0.5em;
+}
+
+.prose li::marker {
+  color: #444444;
+}
+
+.prose blockquote {
+  border-left: 2px solid #2A2A2A;
+  padding-left: 1em;
+  margin: 1.5em 0;
+  color: #666666;
+  font-style: italic;
+}
+
+.prose code {
+  font-family: "Geist Mono", "Fira Code", ui-monospace, monospace;
+  font-size: 13px;
+  background-color: #1A1A1A;
+  border: 1px solid #1F1F1F;
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: #F0F0F0;
+}
+
+.prose pre {
+  background-color: #0F0F0F;
+  border: 1px solid #1F1F1F;
+  border-radius: 8px;
+  padding: 20px 24px;
+  overflow-x: auto;
+  margin: 1.5em 0;
+}
+
+.prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: #888888;
+  border-radius: 0;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid #1F1F1F;
+  margin: 2em 0;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 1.5em 0;
+}
+
+.prose thead {
+  border-bottom: 1px solid #2A2A2A;
+}
+
+.prose th {
+  color: #F0F0F0;
+  font-weight: 500;
+  text-align: left;
+  padding: 8px 12px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.prose td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #1F1F1F;
+  color: #888888;
+}
+
+.prose tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================================
+   ADR BLOCK — Architecture Decision Records
+   ============================================================ */
+
+.adr-block {
+  border: 1px solid #3A3A3A;
+  border-radius: 8px;
+  background-color: #0F0F0F;
+  padding: 20px 24px;
+  margin: 2em 0;
+  font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+.adr-block-label {
+  font-size: 11px;
+  color: #444444;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.adr-block-decision {
+  font-size: 13px;
+  color: #F0F0F0;
+  margin-bottom: 8px;
+}
+
+.adr-block-context {
+  font-size: 13px;
+  color: #666666;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   COMPONENT TOKENS
+   ============================================================ */
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 4px 8px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: #444444;
+  background-color: #1A1A1A;
+  border: 1px solid #1F1F1F;
+  border-radius: 4px;
+  transition: border-color 150ms ease;
+  white-space: nowrap;
+}
+
+.tag:hover {
+  border-color: #2A2A2A;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: #444444;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot--live { background-color: #4AFF91; }
+.status-dot--wip  { background-color: #FFB84A; }
+.status-dot--open { background-color: #4AFF91; }
