@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import Nav from "@/components/layout/Nav";
 import "./globals.css";
 
 /* ============================================================
    FONT LOADING
-   Geist + Geist Mono via next/font/google (zero layout shift)
-   Instrument Serif loaded via @import in globals.css
    ============================================================ */
 
 const geist = Geist({
@@ -60,7 +59,6 @@ export const metadata: Metadata = {
   ],
 
   authors: [{ name: "Abhinav Chaurasia", url: siteUrl }],
-
   creator: "Abhinav Chaurasia",
 
   robots: {
@@ -75,7 +73,6 @@ export const metadata: Metadata = {
     },
   },
 
-  /* --- Open Graph --- */
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -94,7 +91,6 @@ export const metadata: Metadata = {
     ],
   },
 
-  /* --- Twitter / X Card --- */
   twitter: {
     card: "summary_large_image",
     title: "Abhinav Chaurasia · Full-Stack Engineer",
@@ -103,7 +99,6 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
 
-  /* --- Icons --- */
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -128,9 +123,6 @@ export const viewport: Viewport = {
 
 /* ============================================================
    ROOT LAYOUT
-   Font variables are on <html> so all CSS custom properties
-   (--font-geist, --font-geist-mono) are available globally.
-   Background + font-family are set in globals.css on html/body.
    ============================================================ */
 
 export default function RootLayout({
@@ -144,7 +136,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <Nav />
+        <main>{children}</main>
+      </body>
     </html>
   );
 }
