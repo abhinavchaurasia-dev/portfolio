@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import Nav from "@/components/layout/Nav";
+import CommandPalette from "@/components/shared/CommandPalette";
 import "./globals.css";
 
 /* ============================================================
@@ -139,6 +140,7 @@ export default function RootLayout({
       <body>
         <Nav />
         <main>{children}</main>
+        <CommandPalette />
       </body>
     </html>
   );

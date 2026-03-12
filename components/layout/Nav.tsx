@@ -243,7 +243,7 @@ export default function Nav() {
           z-index: 50;
           height: 52px;
           border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
-          background-color: color-mix(in srgb, #0F0F0F 90%, transparent);
+          background-color: color-mix(in srgb, var(--color-bg-elevated, #0F0F0F) 90%, transparent);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
         }
@@ -261,7 +261,7 @@ export default function Nav() {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
           font-size: 14px;
           font-weight: 600;
-          color: #F0F0F0;
+          color: var(--color-text-primary, #F0F0F0);
           letter-spacing: -0.01em;
           flex-shrink: 0;
           transition: opacity 150ms ease;
@@ -286,7 +286,7 @@ export default function Nav() {
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 13px;
           font-weight: 400;
-          color: #888888;
+          color: var(--color-text-secondary, #888888);
           text-decoration: none;
           padding-bottom: 2px;
           transition: color 150ms ease;
@@ -294,13 +294,13 @@ export default function Nav() {
         }
 
         .nav-link:hover {
-          color: #F0F0F0;
+          color: var(--color-text-primary, #F0F0F0);
         }
 
         .nav-link--active {
-          color: #F0F0F0;
+          color: var(--color-text-primary, #F0F0F0);
           text-decoration: underline;
-          text-decoration-color: #4AFF91;
+          text-decoration-color: var(--color-accent, #4AFF91);
           text-decoration-thickness: 1px;
           text-underline-offset: 4px;
         }
@@ -321,17 +321,17 @@ export default function Nav() {
           padding: 4px 8px;
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
           font-size: 11px;
-          color: #444444;
+          color: var(--color-text-muted, #444444);
           background: transparent;
-          border: 1px solid #1F1F1F;
+          border: 1px solid var(--color-border-subtle, #1F1F1F);
           border-radius: 4px;
           cursor: pointer;
           transition: border-color 150ms ease, color 150ms ease;
           white-space: nowrap;
         }
         .nav-search-btn:hover {
-          color: #888888;
-          border-color: #2A2A2A;
+          color: var(--color-text-secondary, #888888);
+          border-color: var(--color-border-default, #2A2A2A);
         }
 
         .nav-search-label {
@@ -344,7 +344,7 @@ export default function Nav() {
         .nav-search-kbd {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
           font-size: 11px;
-          color: #444444;
+          color: var(--color-text-muted, #444444);
           background: none;
           border: none;
           padding: 0;
@@ -357,7 +357,7 @@ export default function Nav() {
           justify-content: center;
           width: 28px;
           height: 28px;
-          color: #888888;
+          color: var(--color-text-secondary, #888888);
           background: transparent;
           border: none;
           border-radius: 4px;
@@ -365,7 +365,7 @@ export default function Nav() {
           transition: color 150ms ease;
           flex-shrink: 0;
         }
-        .nav-icon-btn:hover { color: #F0F0F0; }
+        .nav-icon-btn:hover { color: var(--color-text-primary, #F0F0F0); }
 
         /* --- Hamburger button — mobile only --- */
         .nav-hamburger {
@@ -374,14 +374,14 @@ export default function Nav() {
           justify-content: center;
           width: 28px;
           height: 28px;
-          color: #888888;
+          color: var(--color-text-secondary, #888888);
           background: transparent;
           border: none;
           cursor: pointer;
           transition: color 150ms ease;
           flex-shrink: 0;
         }
-        .nav-hamburger:hover { color: #F0F0F0; }
+        .nav-hamburger:hover { color: var(--color-text-primary, #F0F0F0); }
 
         @media (min-width: 768px) {
           .nav-hamburger { display: none; }
@@ -411,8 +411,8 @@ export default function Nav() {
           bottom: 0;
           z-index: 50;
           width: min(280px, 80vw);
-          background-color: #0F0F0F;
-          border-left: 1px solid #1F1F1F;
+          background-color: var(--color-bg-elevated, #0F0F0F);
+          border-left: 1px solid var(--color-border-subtle, #1F1F1F);
           padding: 72px 32px 40px;
           transform: translateX(100%);
           transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -442,16 +442,16 @@ export default function Nav() {
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 18px;
           font-weight: 500;
-          color: #888888;
+          color: var(--color-text-secondary, #888888);
           text-decoration: none;
           padding: 10px 0;
           transition: color 150ms ease;
-          border-bottom: 1px solid #1F1F1F;
+          border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
         }
-        .drawer-link:hover  { color: #F0F0F0; }
+        .drawer-link:hover  { color: var(--color-text-primary, #F0F0F0); }
 
         .drawer-link--active {
-          color: #F0F0F0;
+          color: var(--color-text-primary, #F0F0F0);
         }
 
         /* --- Reduced motion --- */
