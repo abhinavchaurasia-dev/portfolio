@@ -1,0 +1,95 @@
+---
+title: "Why I used CLIP embeddings instead of text search in PeerCampus"
+date: "2025-11-15"
+category: "AI"
+excerpt: "Building the lost-and-found feature taught me when semantic search outperforms keyword matching — and exactly how to implement it."
+---
+
+When I started building the lost-and-found feature for PeerCampus, my first instinct was a basic text search. User reports a lost laptop bag. Another user finds one. You match on keywords: "black," "bag," "laptop." Simple.
+
+The problem revealed itself immediately: people describe the same object completely differently. The finder says "dark backpack with a side pocket." The owner says "black laptop bag, padded." A keyword search finds nothing. The item sits in the lost-and-found forever, and the user concludes the feature doesn't work.
+
+I needed a different approach.
+
+## What CLIP actually does
+
+CLIP (Contrastive Language–Image Pre-Training) is a model from OpenAI trained on 400 million image-text pairs scraped from the web. The key insight: it encodes both images and text into the same vector space.
+
+What that means in practice: an image of a black backpack and the text "dark laptop bag" will produce embedding vectors that are *close to each other* in 512-dimensional space, even though one is pixels and the other is words. The model learned that these things refer to the same concept.
+
+This is the property I needed. A finder uploads a photo. An owner types a description. CLIP bridges the gap without me having to hand-engineer any matching rules.
+
+## The implementation
+
+The pipeline is straightforward once you understand what CLIP gives you.
+
+**On upload (finder submits a photo):**
+
+```python
+from transformers import CLIPProcessor, CLIPModel
+import torch
+
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+def embed_image(image_bytes: bytes) -> list[float]:
+    from PIL import Image
+    import io
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    inputs = processor(images=image, return_tensors="pt")
+    with torch.no_grad():
+        features = model.get_image_features(**inputs)
+    return features[0].tolist()  # 512-dim float list
+```
+
+The embedding is stored as a `FLOAT[]` column in PostgreSQL alongside the found item record. 512 floats per item — negligible storage.
+
+**On search (owner reports a lost item with text description):**
+
+```python
+def embed_text(text: str) -> list[float]:
+    inputs = processor(text=[text], return_tensors="pt", padding=True)
+    with torch.no_grad():
+        features = model.get_text_features(**inputs)
+    return features[0].tolist()
+```
+
+Then a cosine similarity query against stored image embeddings:
+
+```sql
+SELECT id, description, location,
+       (embedding <=> %s::vector) AS distance
+FROM found_items
+ORDER BY distance ASC
+LIMIT 10;
+```
+
+The `<=>` operator is cosine distance from `pgvector`. Lower is more similar. The top results are returned ranked — no threshold needed at this scale.
+
+## What I got wrong first
+
+I ran the CLIP model synchronously on the upload request handler. This worked fine locally. In staging with concurrent uploads, it blocked the Django worker for 300–400ms per request — not catastrophic at low volume, but I was staring directly at the scaling cliff.
+
+The right architecture is to return a `202 Accepted` immediately and push the embedding computation to a background task (Celery + Redis). The found item row gets created with a `status: "pending"` field, and the match results come back via polling or a WebSocket. I didn't build that in time for this version, and it's the first thing I'd retrofit.
+
+## When this approach makes sense
+
+CLIP isn't always the right tool. For structured data — course codes, room numbers, student IDs — text search is faster and more precise. CLIP shines specifically when:
+
+- The query and the document are in different modalities (text vs. image)
+- Descriptions are informal and vary between users
+- You don't have labelled training data to fine-tune a domain-specific model
+
+The lost-and-found feature hits all three. Someone finds a water bottle and uploads a photo. Someone else lost one and types "blue Nalgene." Neither person is going to write a structured description — they're going to be casual and vague. CLIP handles that naturally.
+
+## What I'd do differently
+
+Beyond moving inference off the request thread, I'd version the embedding model in the schema. CLIP embeddings from different checkpoints aren't numerically comparable — if you upgrade from `clip-vit-base-patch32` to a larger variant, every stored embedding needs recomputation. A `model_version` column makes that migration explicit.
+
+I'd also expose the similarity score to the user as a confidence indicator rather than just a ranked list. A match at distance 0.15 is strong. At 0.45, it's a weak guess. Showing users "High confidence match" versus "Possible match" reduces noise from false positives and builds trust in the feature.
+
+The core takeaway: text search fails when language is informal and varied. Semantic search fails when you need precision. Knowing which problem you have is the whole job.
+
+<Callout>
+  The `pgvector` PostgreSQL extension handles vector storage and cosine distance queries. Install with `CREATE EXTENSION vector;` — no separate vector database needed at this scale.
+</Callout>
