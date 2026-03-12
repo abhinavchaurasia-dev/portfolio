@@ -1,207 +1,378 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Command } from "cmdk";
+import {
+  Briefcase,
+  Copy,
+  Download,
+  Folder,
+  Github,
+  Home,
+  Linkedin,
+  Moon,
+  PenLine,
+  Search,
+  Sun,
+  User,
+} from "lucide-react";
+
+/* ============================================================
+   CONTEXT — allows Nav (and any component) to open the palette
+   without prop-drilling
+   ============================================================ */
+
+interface CommandPaletteContextValue {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+const CommandPaletteContext = createContext<CommandPaletteContextValue>({
+  open: false,
+  setOpen: () => {},
+});
+
+export function useCommandPalette(): CommandPaletteContextValue {
+  return useContext(CommandPaletteContext);
+}
 
 /* ============================================================
    TYPES
    ============================================================ */
 
-interface Command {
-  id: string;
-  label: string;
-  description: string;
-  shortcut?: string;
-  action: () => void;
+type CommandItem =
+  | {
+      id: string;
+      label: string;
+      icon: React.ReactNode;
+      shortcut?: string;
+      href: string;
+      action?: never;
+    }
+  | {
+      id: string;
+      label: string;
+      icon: React.ReactNode;
+      shortcut?: string;
+      href?: never;
+      action: () => void;
+    };
+
+interface CommandGroup {
+  heading: string;
+  items: CommandItem[];
+}
+
+/* ============================================================
+   THEME TOGGLE HELPER
+   Reads/writes the same data-theme attribute as Nav.tsx
+   ============================================================ */
+
+function toggleTheme(): void {
+  const html    = document.documentElement;
+  const current = html.getAttribute("data-theme") ?? "dark";
+  const next    = current === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  try { localStorage.setItem("theme-preference", next); } catch {}
+}
+
+function getCurrentTheme(): "dark" | "light" {
+  if (typeof window === "undefined") return "dark";
+  return (document.documentElement.getAttribute("data-theme") as "dark" | "light") ?? "dark";
 }
 
 /* ============================================================
    COMMAND PALETTE
-   Listens for "openCommandPalette" custom event (fired by Nav)
-   Also opens on Ctrl+K / Cmd+K
    ============================================================ */
 
 export default function CommandPalette() {
-  const router                        = useRouter();
-  const [open, setOpen]               = useState(false);
-  const [query, setQuery]             = useState("");
-  const [activeIndex, setActiveIndex] = useState(0);
-  const inputRef                      = useRef<HTMLInputElement>(null);
+  const router                    = useRouter();
+  const [open, setOpen]           = useState(false);
+  const [theme, setTheme]         = useState<"dark" | "light">("dark");
+  const [mounted, setMounted]     = useState(false);
+  const containerRef              = useRef<HTMLDivElement>(null);
 
-  /* Build command list */
-  const commands: Command[] = [
-    { id: "home",    label: "Go to Home",    description: "Navigate to the homepage",            shortcut: "H", action: () => router.push("/")        },
-    { id: "work",    label: "Go to Work",    description: "View projects and case studies",       shortcut: "W", action: () => router.push("/work")     },
-    { id: "writing", label: "Go to Writing", description: "Browse all blog posts",               shortcut: "B", action: () => router.push("/writing")  },
-    { id: "about",   label: "Go to About",   description: "Learn about Abhinav",                 shortcut: "A", action: () => router.push("/about")    },
-    { id: "github",  label: "Open GitHub",   description: "github.com/abhinavchaurasia-dev",              action: () => window.open("https://github.com/abhinavchaurasia-dev", "_blank")   },
-    { id: "linkedin",label: "Open LinkedIn", description: "linkedin.com/in/abhinavchaurasia-dev",         action: () => window.open("https://linkedin.com/in/abhinavchaurasia-dev", "_blank") },
-    { id: "email",   label: "Send Email",    description: "abhinavc037@gmail.com",                        action: () => window.open("mailto:abhinavc037@gmail.com")                          },
-  ];
+  /* Sync theme label after mount */
+  useEffect(() => {
+    setMounted(true);
+    setTheme(getCurrentTheme());
+  }, []);
 
-  /* Filter by query */
-  const filtered = query.trim() === ""
-    ? commands
-    : commands.filter((c) =>
-        c.label.toLowerCase().includes(query.toLowerCase()) ||
-        c.description.toLowerCase().includes(query.toLowerCase())
-      );
+  /* ── Open helpers ── */
+  const openPalette  = useCallback(() => setOpen(true),  []);
+  const closePalette = useCallback(() => setOpen(false), []);
 
-  /* Open/close */
-  const openPalette  = useCallback(() => { setOpen(true);  setQuery(""); setActiveIndex(0); }, []);
-  const closePalette = useCallback(() => { setOpen(false); setQuery(""); }, []);
+  /* ── Keyboard: ⌘K / Ctrl+K ── */
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-  const runCommand = useCallback((cmd: Command) => {
-    cmd.action();
-    closePalette();
-  }, [closePalette]);
-
-  /* Listen for custom event from Nav */
+  /* ── Custom event from Nav search button ── */
   useEffect(() => {
     window.addEventListener("openCommandPalette", openPalette);
     return () => window.removeEventListener("openCommandPalette", openPalette);
   }, [openPalette]);
 
-  /* Ctrl+K / Cmd+K global shortcut */
+  /* ── Lock body scroll when open ── */
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        open ? closePalette() : openPalette();
-      }
-      if (e.key === "Escape" && open) closePalette();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, openPalette, closePalette]);
-
-  /* Focus input when opened */
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 10);
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  /* Arrow key + Enter navigation */
-  useEffect(() => {
-    if (!open) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+  /* ── Run a command ── */
+  const run = useCallback(
+    (item: CommandItem) => {
+      closePalette();
+      if (item.href) {
+        router.push(item.href);
+      } else if (item.action) {
+        item.action();
+        /* Sync theme label after toggle */
+        if (item.id === "toggle-theme") {
+          setTheme(getCurrentTheme());
+        }
       }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setActiveIndex((i) => Math.max(i - 1, 0));
-      }
-      if (e.key === "Enter" && filtered[activeIndex]) {
-        runCommand(filtered[activeIndex]);
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, filtered, activeIndex, runCommand]);
+    },
+    [closePalette, router]
+  );
 
-  /* Reset active index when query changes */
-  useEffect(() => { setActiveIndex(0); }, [query]);
-
-  if (!open) return null;
+  /* ── Command groups ── */
+  const groups: CommandGroup[] = [
+    {
+      heading: "Navigation",
+      items: [
+        { id: "nav-home",    label: "Home",    icon: <Home      size={16} strokeWidth={1.5} />, shortcut: "H", href: "/"        },
+        { id: "nav-work",    label: "Work",    icon: <Briefcase size={16} strokeWidth={1.5} />, shortcut: "W", href: "/work"    },
+        { id: "nav-writing", label: "Writing", icon: <PenLine   size={16} strokeWidth={1.5} />, shortcut: "B", href: "/writing" },
+        { id: "nav-about",   label: "About",   icon: <User      size={16} strokeWidth={1.5} />, shortcut: "A", href: "/about"   },
+      ],
+    },
+    {
+      heading: "Projects",
+      items: [
+        { id: "proj-railway",    label: "Railway Portal", icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/railway"    },
+        { id: "proj-peercampus", label: "PeerCampus",     icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/peercampus" },
+        { id: "proj-civic",      label: "CivicBridge",    icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/civicbridge" },
+        { id: "proj-senti",      label: "SentiGenix",     icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/sentigenix" },
+      ],
+    },
+    {
+      heading: "Actions",
+      items: [
+        {
+          id: "action-email",
+          label: "Copy email",
+          icon: <Copy size={16} strokeWidth={1.5} />,
+          shortcut: "E",
+          action: async () => {
+            try {
+              await navigator.clipboard.writeText("abhinavc037@gmail.com");
+            } catch {
+              const el = document.createElement("textarea");
+              el.value = "abhinavc037@gmail.com";
+              el.style.cssText = "position:fixed;opacity:0";
+              document.body.appendChild(el);
+              el.select();
+              document.execCommand("copy");
+              document.body.removeChild(el);
+            }
+          },
+        },
+        {
+          id: "action-cv",
+          label: "Download CV",
+          icon: <Download size={16} strokeWidth={1.5} />,
+          shortcut: "R",
+          action: () => window.open("/Abhinav_Chaurasia_Resume.pdf"),
+        },
+        {
+          id: "action-github",
+          label: "Open GitHub",
+          icon: <Github size={16} strokeWidth={1.5} />,
+          shortcut: "G",
+          action: () => window.open("https://github.com/abhinavchaurasia-dev", "_blank"),
+        },
+        {
+          id: "action-linkedin",
+          label: "Open LinkedIn",
+          icon: <Linkedin size={16} strokeWidth={1.5} />,
+          shortcut: "L",
+          action: () => window.open("https://linkedin.com/in/abhinavchaurasia-dev", "_blank"),
+        },
+      ],
+    },
+    {
+      heading: "Theme",
+      items: [
+        {
+          id: "toggle-theme",
+          label: mounted && theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
+          icon: mounted && theme === "dark"
+            ? <Sun  size={16} strokeWidth={1.5} />
+            : <Moon size={16} strokeWidth={1.5} />,
+          action: toggleTheme,
+        },
+      ],
+    },
+  ];
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="cp-backdrop" onClick={closePalette} aria-hidden="true" />
-
-      {/* Panel */}
-      <div
-        className="cp-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Command palette"
-      >
-        {/* Search input row */}
-        <div className="cp-input-row">
-          <Search size={14} strokeWidth={1.5} className="cp-search-icon" aria-hidden="true" />
-          <input
-            ref={inputRef}
-            className="cp-input"
-            placeholder="Type a command or search..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search commands"
-            autoComplete="off"
-            spellCheck={false}
+    <CommandPaletteContext.Provider value={{ open, setOpen }}>
+      {open && (
+        <>
+          {/* ── Backdrop ── */}
+          <div
+            className="cp-backdrop"
+            onClick={closePalette}
+            aria-hidden="true"
           />
-          <button className="cp-close-btn" onClick={closePalette} aria-label="Close palette">
-            <X size={14} strokeWidth={1.5} />
-          </button>
-        </div>
 
-        {/* Results */}
-        <ul className="cp-list" role="listbox">
-          {filtered.length === 0 ? (
-            <li className="cp-empty">No results for &ldquo;{query}&rdquo;</li>
-          ) : (
-            filtered.map((cmd, i) => (
-              <li
-                key={cmd.id}
-                className={`cp-item${i === activeIndex ? " cp-item--active" : ""}`}
-                role="option"
-                aria-selected={i === activeIndex}
-                onMouseEnter={() => setActiveIndex(i)}
-                onClick={() => runCommand(cmd)}
-              >
-                <span className="cp-item-label">{cmd.label}</span>
-                <span className="cp-item-desc">{cmd.description}</span>
-                {cmd.shortcut && (
-                  <kbd className="cp-item-shortcut">{cmd.shortcut}</kbd>
-                )}
-              </li>
-            ))
-          )}
-        </ul>
-      </div>
+          {/* ── Panel ── */}
+          <div className="cp-container" ref={containerRef}>
+            <Command
+              label="Command palette"
+              className="cp-root"
+              loop
+              onKeyDown={(e) => {
+                if (e.key === "Escape") closePalette();
+              }}
+            >
+              {/* Search input */}
+              <div className="cp-input-row">
+                <Search
+                  size={16}
+                  strokeWidth={1.5}
+                  className="cp-search-icon"
+                  aria-hidden="true"
+                />
+                <Command.Input
+                  className="cp-input"
+                  placeholder="Type a command or search..."
+                  autoFocus
+                />
+              </div>
+
+              {/* Results */}
+              <Command.List className="cp-list">
+                <Command.Empty className="cp-empty">
+                  No results found.
+                </Command.Empty>
+
+                {groups.map((group) => (
+                  <Command.Group
+                    key={group.heading}
+                    heading={group.heading}
+                    className="cp-group"
+                  >
+                    {group.items.map((item) => (
+                      <Command.Item
+                        key={item.id}
+                        value={`${item.label} ${group.heading}`}
+                        onSelect={() => run(item)}
+                        className="cp-item"
+                      >
+                        <span className="cp-item-left">
+                          <span className="cp-item-icon" aria-hidden="true">
+                            {item.icon}
+                          </span>
+                          <span className="cp-item-label">{item.label}</span>
+                        </span>
+                        {item.shortcut && (
+                          <kbd className="cp-item-shortcut" aria-label={`Shortcut: ${item.shortcut}`}>
+                            {item.shortcut}
+                          </kbd>
+                        )}
+                      </Command.Item>
+                    ))}
+                  </Command.Group>
+                ))}
+              </Command.List>
+
+              {/* Footer */}
+              <div className="cp-footer" aria-hidden="true">
+                <span className="cp-footer-hint">
+                  <kbd className="cp-footer-key">↵</kbd> select
+                </span>
+                <span className="cp-footer-hint">
+                  <kbd className="cp-footer-key">↑↓</kbd> navigate
+                </span>
+                <span className="cp-footer-hint">
+                  <kbd className="cp-footer-key">esc</kbd> close
+                </span>
+              </div>
+            </Command>
+          </div>
+        </>
+      )}
 
       <style>{`
+        /* ── Backdrop ── */
         .cp-backdrop {
           position: fixed;
           inset: 0;
           z-index: 80;
-          background-color: rgba(8, 8, 8, 0.7);
+          background-color: rgba(0, 0, 0, 0.70);
           backdrop-filter: blur(4px);
           -webkit-backdrop-filter: blur(4px);
-          animation: cpFadeIn var(--duration-base, 250ms) var(--ease-out) forwards;
+          animation: cpBackdropIn 200ms ease forwards;
         }
 
-        @keyframes cpFadeIn {
+        @keyframes cpBackdropIn {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
 
-        .cp-panel {
+        /* ── Container ── */
+        .cp-container {
           position: fixed;
-          top: 20vh;
+          top: 20%;
           left: 50%;
-          transform: translateX(-50%);
           z-index: 90;
-          width: min(580px, 92vw);
+          width: min(560px, calc(100vw - 48px));
+          transform: translateX(-50%);
           background-color: var(--color-bg-elevated, #0F0F0F);
           border: 1px solid var(--color-border-default, #2A2A2A);
-          border-radius: 10px;
+          border-radius: 8px;
+          box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
           overflow: hidden;
-          animation: cpSlideIn var(--duration-base, 250ms) var(--ease-out) forwards;
+          animation: cpPanelIn 250ms cubic-bezier(0, 0, 0.2, 1) forwards;
         }
 
-        @keyframes cpSlideIn {
+        @keyframes cpPanelIn {
           from { opacity: 0; transform: translateX(-50%) scale(0.96); }
-          to   { opacity: 1; transform: translateX(-50%) scale(1); }
+          to   { opacity: 1; transform: translateX(-50%) scale(1);    }
         }
 
+        /* ── cmdk root ── */
+        .cp-root {
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* ── Input row ── */
         .cp-input-row {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 14px 16px;
+          gap: 12px;
+          height: 52px;
+          padding: 0 16px;
           border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
+          flex-shrink: 0;
         }
 
         .cp-search-icon {
@@ -218,96 +389,137 @@ export default function CommandPalette() {
           border: none;
           outline: none;
           caret-color: var(--color-accent, #4AFF91);
+          min-width: 0;
         }
 
         .cp-input::placeholder {
           color: var(--color-text-muted, #444444);
         }
 
-        .cp-close-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          color: var(--color-text-muted, #444444);
-          background: transparent;
-          border: 1px solid var(--color-border-subtle, #1F1F1F);
-          border-radius: 4px;
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: color var(--duration-fast, 150ms) ease,
-                      border-color var(--duration-fast, 150ms) ease;
-        }
-        .cp-close-btn:hover {
-          color: var(--color-text-primary, #F0F0F0);
-          border-color: var(--color-border-default, #2A2A2A);
-        }
-
+        /* ── Results list ── */
         .cp-list {
-          list-style: none;
-          margin: 0;
-          padding: 6px;
-          max-height: 340px;
           overflow-y: auto;
+          max-height: 360px;
+          padding: 6px;
+          scrollbar-width: thin;
+          scrollbar-color: var(--color-border-default, #2A2A2A) transparent;
         }
 
+        /* ── Group ── */
+        .cp-group [cmdk-group-heading] {
+          padding: 8px 8px 4px;
+          font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 10px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--color-text-muted, #444444);
+          user-select: none;
+        }
+
+        /* ── Item ── */
         .cp-item {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          border-radius: 6px;
+          justify-content: space-between;
+          gap: 12px;
+          height: 40px;
+          padding: 0 10px;
+          border-radius: 5px;
           cursor: pointer;
-          transition: background-color var(--duration-fast, 150ms) ease;
+          outline: none;
+          user-select: none;
+          transition: background-color 80ms ease;
         }
 
-        .cp-item--active {
+        .cp-item[aria-selected="true"],
+        .cp-item:hover {
           background-color: var(--color-bg-overlay, #141414);
+        }
+
+        .cp-item-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+
+        .cp-item-icon {
+          display: flex;
+          align-items: center;
+          color: var(--color-text-muted, #444444);
+          flex-shrink: 0;
         }
 
         .cp-item-label {
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 13px;
-          font-weight: 500;
           color: var(--color-text-primary, #F0F0F0);
-          flex-shrink: 0;
-        }
-
-        .cp-item-desc {
-          font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 11px;
-          color: var(--color-text-muted, #444444);
-          flex: 1;
+          white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
         }
 
         .cp-item-shortcut {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
           font-size: 11px;
           color: var(--color-text-muted, #444444);
-          background-color: var(--color-bg-inset, #1A1A1A);
+          background: transparent;
           border: 1px solid var(--color-border-subtle, #1F1F1F);
           border-radius: 3px;
-          padding: 1px 5px;
+          padding: 2px 6px;
           flex-shrink: 0;
+          line-height: 1;
         }
 
+        /* ── Empty state ── */
         .cp-empty {
-          padding: 20px 16px;
+          padding: 24px 16px;
+          text-align: center;
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 13px;
           color: var(--color-text-muted, #444444);
-          text-align: center;
         }
 
+        /* ── Footer ── */
+        .cp-footer {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          height: 36px;
+          padding: 0 16px;
+          border-top: 1px solid var(--color-border-subtle, #1F1F1F);
+          flex-shrink: 0;
+        }
+
+        .cp-footer-hint {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 10px;
+          color: var(--color-text-muted, #444444);
+          user-select: none;
+        }
+
+        .cp-footer-key {
+          font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 10px;
+          color: var(--color-text-muted, #444444);
+          background: transparent;
+          border: 1px solid var(--color-border-subtle, #1F1F1F);
+          border-radius: 3px;
+          padding: 1px 4px;
+          line-height: 1.4;
+        }
+
+        /* ── Reduced motion ── */
         @media (prefers-reduced-motion: reduce) {
-          .cp-backdrop { animation: none; }
-          .cp-panel    { animation: none; }
+          .cp-backdrop  { animation: none; }
+          .cp-container { animation: none; }
+          .cp-item      { transition: none; }
         }
       `}</style>
-    </>
+    </CommandPaletteContext.Provider>
   );
 }
