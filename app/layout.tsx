@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import Nav from "@/components/layout/Nav";
+import Footer from "@/components/layout/Footer";
 import CommandPalette from "@/components/shared/CommandPalette";
 import AIAssistant from "@/components/shared/AIAssistant";
 import "./globals.css";
 
 /* ============================================================
-   FONT LOADING
+   FONTS
    ============================================================ */
 
 const geist = Geist({
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
   title: {
-    default: "Abhinav Chaurasia",
+    default:  "Abhinav Chaurasia",
     template: "%s · Abhinav Chaurasia",
   },
 
@@ -58,16 +59,20 @@ export const metadata: Metadata = {
     "PostgreSQL",
     "Software Engineer",
     "Portfolio",
+    "University of Lucknow",
   ],
 
-  authors: [{ name: "Abhinav Chaurasia", url: siteUrl }],
-  creator: "Abhinav Chaurasia",
+  authors:   [{ name: "Abhinav Chaurasia", url: siteUrl }],
+  creator:   "Abhinav Chaurasia",
+  publisher: "Abhinav Chaurasia",
+
+  alternates: { canonical: siteUrl },
 
   robots: {
-    index: true,
+    index:  true,
     follow: true,
     googleBot: {
-      index: true,
+      index:  true,
       follow: true,
       "max-video-preview": -1,
       "max-image-preview": "large",
@@ -76,35 +81,36 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    type: "website",
-    locale: "en_IN",
-    url: siteUrl,
-    siteName: "Abhinav Chaurasia",
-    title: "Abhinav Chaurasia · Full-Stack Engineer",
-    description:
-      "Full-Stack Engineer · AI Integrations. React, Django, Node.js, PostgreSQL.",
+    type:        "website",
+    locale:      "en_IN",
+    url:         siteUrl,
+    siteName:    "Abhinav Chaurasia",
+    title:       "Abhinav Chaurasia · Full-Stack Engineer",
+    description: "Full-Stack Engineer · AI Integrations. React, Django, Node.js, PostgreSQL.",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
+        url:    "/og-image.png",
+        width:  1200,
         height: 630,
-        alt: "Abhinav Chaurasia · Full-Stack Engineer · AI Integrations",
+        alt:    "Abhinav Chaurasia · Full-Stack Engineer · AI Integrations",
+        type:   "image/png",
       },
     ],
   },
 
   twitter: {
-    card: "summary_large_image",
-    title: "Abhinav Chaurasia · Full-Stack Engineer",
-    description:
-      "Full-Stack Engineer · AI Integrations. React, Django, Node.js, PostgreSQL.",
-    images: ["/og-image.png"],
+    card:        "summary_large_image",
+    site:        "@abhinavcdev",
+    creator:     "@abhinavcdev",
+    title:       "Abhinav Chaurasia · Full-Stack Engineer",
+    description: "Full-Stack Engineer · AI Integrations. React, Django, Node.js, PostgreSQL.",
+    images:      ["/og-image.png"],
   },
 
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico",  sizes: "any" },
+      { url: "/icon.svg",     type: "image/svg+xml" },
     ],
     apple: "/apple-touch-icon.png",
   },
@@ -117,10 +123,38 @@ export const metadata: Metadata = {
    ============================================================ */
 
 export const viewport: Viewport = {
-  themeColor: "#080808",
-  colorScheme: "dark",
-  width: "device-width",
+  themeColor:   "#080808",
+  colorScheme:  "dark",
+  width:        "device-width",
   initialScale: 1,
+};
+
+/* ============================================================
+   JSON-LD — Person schema
+   ============================================================ */
+
+const personJsonLd = {
+  "@context":  "https://schema.org",
+  "@type":     "Person",
+  name:        "Abhinav Chaurasia",
+  url:         siteUrl,
+  image:       `${siteUrl}/og-image.png`,
+  jobTitle:    "Full-Stack Engineer",
+  description: "Final-year CSE student building full-stack systems with AI integrations.",
+  email:       "abhinavc037@gmail.com",
+  sameAs: [
+    "https://github.com/abhinavchaurasia-dev",
+    "https://linkedin.com/in/abhinavchaurasia-dev",
+  ],
+  alumniOf: {
+    "@type": "CollegeOrUniversity",
+    name:    "University of Lucknow",
+  },
+  knowsAbout: [
+    "React", "Django", "Node.js", "PostgreSQL",
+    "CLIP embeddings", "OpenAI API", "Gemini AI",
+    "Full-Stack Engineering", "AI Integration",
+  ],
 };
 
 /* ============================================================
@@ -129,18 +163,23 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+      </head>
       <body>
         <Nav />
         <main>{children}</main>
+        <Footer />
         <CommandPalette />
         <AIAssistant />
       </body>

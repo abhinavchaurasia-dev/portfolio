@@ -1,0 +1,16 @@
+{
+  "name": "Abhinav Chaurasia",
+  "short_name": "Abhinav",
+  "description": "Full-Stack Engineer · AI Integrations",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
