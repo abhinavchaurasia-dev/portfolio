@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import Nav from "@/components/layout/Nav";
 import CommandPalette from "@/components/shared/CommandPalette";
+import AIAssistant from "@/components/shared/AIAssistant";
 import "./globals.css";
 
 /* ============================================================
@@ -141,6 +142,7 @@ export default function RootLayout({
         <Nav />
         <main>{children}</main>
         <CommandPalette />
+        <AIAssistant />
       </body>
     </html>
   );

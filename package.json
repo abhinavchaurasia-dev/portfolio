@@ -9,10 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.41",
     "@types/mdx": "^2.0.13",
+    "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
-    "ai": "^6.0.116",
     "cmdk": "^1.1.1",
     "framer-motion": "^12.35.2",
     "gray-matter": "^4.0.3",
