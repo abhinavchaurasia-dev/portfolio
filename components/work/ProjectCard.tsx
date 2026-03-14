@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 
 /* ============================================================
    TYPES
    ============================================================ */
+
+export type ThumbnailVariant =
+  | "railway"
+  | "peercampus"
+  | "civicbridge"
+  | "sentigenix";
 
 export interface ProjectCardProps {
   title: string;
@@ -19,6 +25,7 @@ export interface ProjectCardProps {
   caseStudyHref: string;
   liveHref?: string;
   sourceHref?: string;
+  thumbnail: ThumbnailVariant;
 }
 
 /* ============================================================
@@ -42,6 +49,13 @@ const STATUS_CONFIG = {
   },
 } as const;
 
+const THUMBNAIL_GRADIENTS: Record<ThumbnailVariant, string> = {
+  railway:     "linear-gradient(135deg, #0a1628, #0d2137, #091820)",
+  peercampus:  "linear-gradient(135deg, #120a24, #0d1a3c, #071a24)",
+  civicbridge: "linear-gradient(135deg, #200a12, #1a0d28, #0a1020)",
+  sentigenix:  "linear-gradient(135deg, #0a1c14, #091828, #120a18)",
+};
+
 /* ============================================================
    PROJECT CARD
    ============================================================ */
@@ -57,21 +71,39 @@ export default function ProjectCard({
   caseStudyHref,
   liveHref,
   sourceHref,
+  thumbnail,
 }: ProjectCardProps) {
-  const reduceMotion  = useReducedMotion();
   const statusCfg     = STATUS_CONFIG[status];
   const visibleTags   = tags.slice(0, MAX_TAGS);
   const overflowCount = tags.length - MAX_TAGS;
+  const initial       = title.charAt(0).toUpperCase();
+  const gradient      = THUMBNAIL_GRADIENTS[thumbnail];
 
   return (
     <motion.article
       className="pc"
-      initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      /*
+       * FIX: useReducedMotion() was removed — it reads a media query only
+       * on the client, producing different initial/whileInView values on
+       * server vs client → hydration mismatch. Static values are safe;
+       * prefers-reduced-motion is handled via CSS below instead.
+       */
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={reduceMotion ? undefined : { duration: 0.4, ease: [0, 0, 0.2, 1] }}
+      transition={{ duration: 0.4, ease: [0, 0, 0.2, 1] }}
       aria-label={`${title} — ${status}`}
     >
+      {/* ── THUMBNAIL ── */}
+      <div
+        className="pc-thumbnail"
+        aria-hidden="true"
+        style={{ background: gradient }}
+      >
+        <span className="pc-thumb-letter">{initial}</span>
+        <span className="pc-thumb-type">{type}</span>
+      </div>
+
       {/* ── ROW A: Meta bar ── */}
       <div className="pc-meta">
         <div className="pc-status" aria-label={`Status: ${status}`}>
@@ -165,13 +197,51 @@ export default function ProjectCard({
           background-color: var(--color-bg-elevated, #0F0F0F);
           border: 1px solid var(--color-border-subtle, #1F1F1F);
           border-radius: 8px;
-          padding: 20px 24px;
+          padding: 0 0 20px 0;
           transition: border-color 150ms ease;
           cursor: default;
+          overflow: hidden;
         }
 
         .pc:hover {
           border-color: var(--color-border-default, #2A2A2A);
+        }
+
+        /* ── THUMBNAIL ── */
+        .pc-thumbnail {
+          height: 200px;
+          width: 100%;
+          border-radius: 6px 6px 0 0;
+          overflow: hidden;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+
+        .pc-thumb-letter {
+          font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 48px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.06);
+          line-height: 1;
+          user-select: none;
+        }
+
+        .pc-thumb-type {
+          font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 10px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          color: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 4px 10px;
+          border-radius: 3px;
+          user-select: none;
         }
 
         /* ── ROW A: Meta ── */
@@ -180,6 +250,7 @@ export default function ProjectCard({
           align-items: center;
           justify-content: space-between;
           margin-bottom: 12px;
+          padding: 0 24px;
         }
 
         .pc-status {
@@ -214,6 +285,7 @@ export default function ProjectCard({
           display: flex;
           align-items: baseline;
           margin-bottom: 10px;
+          padding: 0 24px;
         }
 
         .pc-title {
@@ -240,6 +312,7 @@ export default function ProjectCard({
           color: var(--color-text-secondary, #888888);
           line-height: 1.65;
           margin-bottom: 12px;
+          padding: 0 24px;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -255,7 +328,7 @@ export default function ProjectCard({
           border: 1px solid var(--color-border-subtle, #1F1F1F);
           border-radius: 4px;
           padding: 8px 10px;
-          margin-bottom: 14px;
+          margin: 0 24px 14px 24px;
         }
 
         .pc-arch-label {
@@ -290,6 +363,7 @@ export default function ProjectCard({
           justify-content: space-between;
           gap: 12px;
           flex-wrap: wrap;
+          padding: 0 24px;
         }
 
         /* Tags */
@@ -339,7 +413,7 @@ export default function ProjectCard({
           color: var(--color-text-primary, #F0F0F0);
         }
 
-        /* Reduced motion */
+        /* Honour reduced-motion via CSS — no JS hook needed */
         @media (prefers-reduced-motion: reduce) {
           .pc      { transition: none; }
           .pc-link { transition: none; }

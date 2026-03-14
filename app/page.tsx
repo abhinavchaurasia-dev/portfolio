@@ -18,7 +18,6 @@ import { ArrowRight } from "lucide-react";
 export default function HomePage() {
   return (
     <PageWrapper>
-
       {/* ── SECTION 1: Hero ── */}
       <Hero />
 
@@ -41,47 +40,51 @@ export default function HomePage() {
           {/* Project cards */}
           <div className="home-cards">
             <ProjectCard
+              thumbnail="railway"
               title="Trainee Management Portal"
               status="PRODUCTION"
               year="2025"
               type="Full-Stack · Node.js · Internal Tool"
               description="Full-stack portal replacing paper-based registration, attendance, and certificate generation at Northern Railway Workshop Training Center."
-              architecture="Layered Node.js API (routes/controllers/services) · PostgreSQL · Automated PDF pipeline · React MUI"
+              architecture="Layered Node.js API (routes/controllers/services) · PostgreSQL · React"
               tags={["Node.js", "Express", "PostgreSQL", "React"]}
               caseStudyHref="/work/railway"
             />
             <ProjectCard
+              thumbnail="peercampus"
               title="PeerCampus"
               status="SHIPPED"
               year="2025"
-              type="Full-Stack · AI Integration · Django"
+              type="Full-Stack · AI Integration · Finops"
               description="AI-assisted campus super-app: events, forums, lost-and-found with CLIP image matching, skills marketplace."
-              architecture="Django REST (6 apps · 57 endpoints) · CLIP embeddings · GPT-4o-mini · JWT + Google OAuth"
+              architecture="Django REST (6 apps · 57 endpoints) · CLIP embeddings · GPT-4o-mini"
               tags={["React", "Django", "PostgreSQL", "CLIP"]}
               caseStudyHref="/work/peercampus"
-              liveHref="#"
+              liveHref="https://peercampus.example.com"
             />
             <ProjectCard
+              thumbnail="civicbridge"
               title="CivicBridge"
               status="SHIPPED"
               year="2025"
-              type="Full-Stack · Gemini AI · Civic Tech"
+              type="Full-Stack · Gemini AI · Civic-Tech"
               description="Complaint platform with AI-generated descriptions, GPS detection, and municipality performance leaderboard."
               architecture="Gemini AI integration · GPS + photo pipeline · Complaint lifecycle state machine"
               tags={["React", "Django", "Gemini AI", "GPS API"]}
               caseStudyHref="/work/civicbridge"
-              liveHref="#"
+              liveHref="https://civicbridge.example.com"
             />
             <ProjectCard
+              thumbnail="sentigenix"
               title="SentiGenix"
               status="SHIPPED"
               year="2025"
               type="Full-Stack · NLP · Sentiment Analysis"
               description="Sentiment analysis platform with VADER NLP classification and DeepSeek AI-guided text rewriting."
-              architecture="VADER NLP pipeline · DeepSeek API integration · Real-time classification · Django"
+              architecture="VADER NLP pipeline · DeepSeek API integration · Real-time classification"
               tags={["React", "Django", "VADER", "DeepSeek"]}
               caseStudyHref="/work/sentigenix"
-              liveHref="#"
+              liveHref="https://sentigenix.example.com"
             />
           </div>
         </section>
@@ -98,8 +101,8 @@ export default function HomePage() {
           </span>
           <p className="home-approach-p1">
             I document architecture decisions, not just implementations. Every
-            project here includes the tradeoffs I considered, the alternatives
-            I rejected, and what I&rsquo;d change if I rebuilt it.
+            project here includes the tradeoffs I considered, the alternatives I
+            rejected, and what I&rsquo;d change if I rebuilt it.
           </p>
           <p className="home-approach-p2">
             That&rsquo;s what separates shipping code from engineering it.
@@ -109,7 +112,10 @@ export default function HomePage() {
 
       {/* ── SECTION 4: Writing Preview ── */}
       <SectionReveal delay={0.05}>
-        <section aria-labelledby="writing-heading" style={{ marginTop: "64px" }}>
+        <section
+          aria-labelledby="writing-heading"
+          style={{ marginTop: "64px" }}
+        >
           <div className="home-section-header">
             <span id="writing-heading" className="home-section-label">
               Writing
@@ -203,7 +209,6 @@ export default function HomePage() {
           .home-section-link { transition: none; }
         }
       `}</style>
-
     </PageWrapper>
   );
 }
