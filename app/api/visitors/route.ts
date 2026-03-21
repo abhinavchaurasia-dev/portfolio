@@ -9,6 +9,8 @@ import { Redis } from "@upstash/redis";
    ============================================================ */
 
 const REDIS_KEY = "portfolio:visitors";
+const COUNT_WINDOW = 60 * 60; // 1 hour in seconds
+const MAX_INCREMENTS = 3; // max 3 increments per IP per hour
 
 function getRedis(): Redis | null {
   if (
@@ -21,7 +23,7 @@ function getRedis(): Redis | null {
 }
 
 /* ── POST — increment and return new total ── */
-export async function POST() {
+export async function POST(req: Request) {
   const redis = getRedis();
 
   if (!redis) {
@@ -29,15 +31,41 @@ export async function POST() {
     return Response.json({ count: 42 });
   }
 
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const ip = forwardedFor?.split(",")[0]?.trim()
+    ?? req.headers.get("x-real-ip")?.trim()
+    ?? "unknown";
+
+  const rateLimitKey = `visitor_ratelimit:${ip}`;
+
   try {
-    const count = await redis.incr(REDIS_KEY);
+    const current = await redis.get<number>(rateLimitKey);
+
+    if (current !== null && current >= MAX_INCREMENTS) {
+      const count = (await redis.get<number>(REDIS_KEY)) ?? 0;
+      return Response.json({ count });
+    }
+
+    const pipe = redis.pipeline();
+    pipe.incr(rateLimitKey);
+    pipe.expire(rateLimitKey, COUNT_WINDOW);
+    pipe.incr(REDIS_KEY);
+
+    const results = await pipe.exec();
+    const countFromPipeline = results[2];
+    const count = typeof countFromPipeline === "number"
+      ? countFromPipeline
+      : (await redis.get<number>(REDIS_KEY)) ?? 0;
+
     return Response.json({ count });
   } catch (error) {
-    console.error("Redis write failed:", error);
-    return Response.json(
-      { error: "Failed to update data" },
-      { status: 500 }
-    );
+    console.error("Visitor counter error:", error);
+    try {
+      const count = (await redis.get<number>(REDIS_KEY)) ?? 0;
+      return Response.json({ count });
+    } catch {
+      return Response.json({ count: 0 });
+    }
   }
 }
 
