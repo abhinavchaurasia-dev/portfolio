@@ -149,3 +149,4 @@ export default function ADRBlock({ system, stack, decisions }: ADRBlockProps) {
     </div>
   );
 }
+

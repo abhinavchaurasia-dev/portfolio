@@ -1,195 +1,134 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, Github } from "lucide-react";
 
 /* ============================================================
-   CASE STUDY LAYOUT
-   Shared shell for all 4 project case studies.
-   Server component — all interactivity lives in children.
+   TYPES
    ============================================================ */
 
+export type CaseStudyStatus = "PRODUCTION" | "SHIPPED" | "BUILDING";
+
+export interface MetaItem {
+  label: string;
+  value: string;
+  badge?: boolean; // renders value as a coloured status badge
+}
+
+export interface NavLink {
+  label: string;
+  href: string;
+}
+
 export interface CaseStudyLayoutProps {
+  /* Hero */
+  gradient: string;          // CSS gradient string for banner
+  tags: string[];            // pill tags shown below banner
+
+  /* Header */
   title: string;
-  oneLiner: string;
-  thumbnail: "railway" | "peercampus" | "civicbridge" | "sentigenix";
-  tags: string[];
-  timeline: string;
-  role: string;
-  team: string;
-  status: "PRODUCTION" | "SHIPPED";
+  subtitle?: string;
+
+  /* Metadata row */
+  meta: MetaItem[];          // e.g. Timeline, Role, Team, Status
+
+  /* Action buttons */
   liveHref?: string;
   sourceHref?: string;
-  prev?: { label: string; href: string };
-  next?: { label: string; href: string };
+
+  /* Navigation */
+  backHref?: string;         // defaults to /projects
+  backLabel?: string;
+  prevProject?: NavLink;
+  nextProject?: NavLink;
+
+  /* Body content */
   children: ReactNode;
 }
 
-/* ── Thumbnail gradients (per spec) ── */
-const GRADIENTS: Record<CaseStudyLayoutProps["thumbnail"], string> = {
-  railway:    "linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #091820 100%)",
-  peercampus: "linear-gradient(135deg, #120a24 0%, #0d1a3c 50%, #071a24 100%)",
-  civicbridge:"linear-gradient(135deg, #200a12 0%, #1a0d28 50%, #0a1020 100%)",
-  sentigenix: "linear-gradient(135deg, #0a1c14 0%, #091828 50%, #120a18 100%)",
+const STATUS_BADGE: Record<string, { color: string; bg: string; border: string }> = {
+  PRODUCTION: { color: "#4AFF91", bg: "#4AFF9115", border: "#4AFF9130" },
+  SHIPPED:    { color: "#4AFF91", bg: "#4AFF9115", border: "#4AFF9130" },
+  BUILDING:   { color: "#FFB84A", bg: "rgba(255,184,74,0.08)", border: "rgba(255,184,74,0.2)" },
+  COMPLETED:  { color: "#4AFF91", bg: "#4AFF9115", border: "#4AFF9130" },
 };
 
-/* ── Simple SVG patterns per project ── */
-function ThumbnailPattern({ type }: { type: CaseStudyLayoutProps["thumbnail"] }) {
-  const stroke = "var(--color-border-default, #2A2A2A)";
-
-  if (type === "railway") {
-    // Horizontal rail lines
-    return (
-      <svg width="200" height="80" viewBox="0 0 200 80" fill="none" aria-hidden="true">
-        {[10, 26, 42, 58, 74].map((y) => (
-          <line key={y} x1="0" y1={y} x2="200" y2={y} stroke={stroke} strokeWidth="1" />
-        ))}
-        {[20, 60, 100, 140, 180].map((x) => (
-          <line key={x} x1={x} y1="0" x2={x} y2="80" stroke={stroke} strokeWidth="1" strokeDasharray="4 6" />
-        ))}
-      </svg>
-    );
-  }
-
-  if (type === "peercampus") {
-    // Connected node graph
-    const nodes = [[40,40],[100,20],[160,40],[100,60],[70,70],[130,70]] as const;
-    const edges = [[0,1],[1,2],[2,3],[3,0],[0,4],[2,5],[4,5],[1,3]] as const;
-    return (
-      <svg width="200" height="80" viewBox="0 0 200 80" fill="none" aria-hidden="true">
-        {edges.map(([a,b], i) => (
-          <line key={i}
-            x1={nodes[a][0]} y1={nodes[a][1]}
-            x2={nodes[b][0]} y2={nodes[b][1]}
-            stroke={stroke} strokeWidth="1"
-          />
-        ))}
-        {nodes.map(([x,y], i) => (
-          <circle key={i} cx={x} cy={y} r="3" fill={stroke} />
-        ))}
-      </svg>
-    );
-  }
-
-  if (type === "civicbridge") {
-    // Location pin outline
-    return (
-      <svg width="200" height="80" viewBox="0 0 200 80" fill="none" aria-hidden="true">
-        <circle cx="100" cy="32" r="18" stroke={stroke} strokeWidth="1" />
-        <circle cx="100" cy="32" r="5" stroke={stroke} strokeWidth="1" />
-        <path d="M100 50 L92 66 Q100 72 108 66 Z" stroke={stroke} strokeWidth="1" fill="none" />
-        {[40,60,70,130,140,160].map((x,i) => (
-          <circle key={i} cx={x} cy={i % 2 === 0 ? 20 : 60} r="2" fill={stroke} />
-        ))}
-      </svg>
-    );
-  }
-
-  // sentigenix — waveform
-  const pts = [0,8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128,136,144,152,160,168,176,184,192,200];
-  const amps = [0,4,-4,12,-12,20,-20,14,-14,7,-7,18,-18,10,-10,3,-3,16,-16,8,-8,5,-5,2,-2,0];
-  const d = pts.map((x,i) => `${i===0?"M":"L"}${x} ${40 + amps[i]}`).join(" ");
-  return (
-    <svg width="200" height="80" viewBox="0 0 200 80" fill="none" aria-hidden="true">
-      <path d={d} stroke={stroke} strokeWidth="1.5" fill="none" />
-    </svg>
-  );
-}
-
-/* ── Status badge ── */
-const STATUS_COLOR: Record<string, string> = {
-  PRODUCTION: "var(--color-accent, #4AFF91)",
-  SHIPPED:    "var(--color-accent, #4AFF91)",
-};
+/* ============================================================
+   COMPONENT
+   ============================================================ */
 
 export default function CaseStudyLayout({
-  title,
-  oneLiner,
-  thumbnail,
+  gradient,
   tags,
-  timeline,
-  role,
-  team,
-  status,
+  title,
+  subtitle,
+  meta,
   liveHref,
   sourceHref,
-  prev,
-  next,
+  backHref = "/projects",
+  backLabel = "Back to Projects",
+  prevProject,
+  nextProject,
   children,
 }: CaseStudyLayoutProps) {
-  const statusColor = STATUS_COLOR[status] ?? "var(--color-accent, #4AFF91)";
-
-  const meta = [
-    { label: "Timeline", value: timeline },
-    { label: "Role",     value: role     },
-    { label: "Team",     value: team     },
-    { label: "Status",   value: status   },
-  ];
-
   return (
     <article className="cs">
 
-      {/* ── Back link ── */}
-      <Link href="/work" className="cs-back" aria-label="Back to all work">
-        ← Work
-      </Link>
-
-      {/* ── Thumbnail ── */}
-      <div
-        className="cs-thumb"
-        style={{ background: GRADIENTS[thumbnail] }}
-        role="img"
-        aria-label={`${title} project thumbnail`}
-      >
-        <span className="cs-thumb-label">
-          {title}
-        </span>
-        <ThumbnailPattern type={thumbnail} />
+      {/* ── BACK LINK ── */}
+      <div className="cs-back-wrap">
+        <Link href={backHref} className="cs-back">
+          <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" />
+          {backLabel}
+        </Link>
       </div>
 
-      {/* ── Tech tags ── */}
-      <ul className="cs-tags" role="list" aria-label="Technologies">
-        {tags.map((t) => (
-          <li key={t} className="cs-tag">{t}</li>
-        ))}
-      </ul>
+      {/* ── HERO BANNER ── */}
+      <div className="cs-hero" style={{ background: gradient }} aria-hidden="true" />
 
-      {/* ── Title ── */}
+      {/* ── TAG PILLS ── */}
+      <div className="cs-tags" aria-label="Project tags">
+        {tags.map((tag) => (
+          <span key={tag} className="cs-tag">{tag}</span>
+        ))}
+      </div>
+
+      {/* ── TITLE + SUBTITLE ── */}
       <h1 className="cs-title">{title}</h1>
+      {subtitle && <p className="cs-subtitle">{subtitle}</p>}
 
-      {/* ── One-liner ── */}
-      <p className="cs-oneliner">{oneLiner}</p>
+      {/* ── METADATA ROW ── */}
+      <div className="cs-meta-row" role="list">
+        {meta.map((m) => {
+          const badge = m.badge ? STATUS_BADGE[m.value.toUpperCase()] ?? null : null;
+          return (
+            <div key={m.label} className="cs-meta-item" role="listitem">
+              <span className="cs-meta-label">{m.label}</span>
+              {badge ? (
+                <span
+                  className="cs-meta-badge"
+                  style={{ color: badge.color, background: badge.bg, border: `1px solid ${badge.border}` }}
+                >
+                  {m.value}
+                </span>
+              ) : (
+                <span className="cs-meta-value">{m.value}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-      {/* ── Meta row ── */}
-      <dl className="cs-meta">
-        {meta.map(({ label, value }, i) => (
-          <div key={label} className={`cs-meta-cell${i === meta.length - 1 ? " cs-meta-cell--last" : ""}`}>
-            <dt className="cs-meta-label">{label}</dt>
-            <dd
-              className="cs-meta-value"
-              style={label === "Status" ? { color: statusColor } : undefined}
-            >
-              {value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-
-      {/* ── Divider ── */}
-      <div className="cs-divider" role="separator" />
-
-      {/* ── CTA links ── */}
+      {/* ── ACTION BUTTONS ── */}
       {(liveHref || sourceHref) && (
-        <div className="cs-ctas">
+        <div className="cs-actions">
           {liveHref && (
             <a
               href={liveHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="cs-cta-link"
-              aria-label={`${title} live demo, opens in new tab`}
+              className="cs-btn cs-btn--primary"
             >
+              <ExternalLink size={14} strokeWidth={1.5} aria-hidden="true" />
               Live Demo
-              <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden="true" />
             </a>
           )}
           {sourceHref && (
@@ -197,103 +136,97 @@ export default function CaseStudyLayout({
               href={sourceHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="cs-cta-link"
-              aria-label={`${title} source code, opens in new tab`}
+              className="cs-btn cs-btn--secondary"
             >
+              <Github size={14} strokeWidth={1.5} aria-hidden="true" />
               Source Code
-              <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden="true" />
             </a>
           )}
         </div>
       )}
 
-      {/* ── Body content (sections injected by page) ── */}
+      {/* ── DIVIDER ── */}
+      <div className="cs-divider" role="separator" />
+
+      {/* ── BODY CONTENT ── */}
       <div className="cs-body">
         {children}
       </div>
 
-      {/* ── Prev / Next navigation ── */}
-      {(prev || next) && (
-        <nav className="cs-nav" aria-label="Project navigation">
-          <div className="cs-nav-side cs-nav-side--left">
-            {prev && (
-              <Link href={prev.href} className="cs-nav-link">
-                <span className="cs-nav-direction">← Previous Project</span>
-                <span className="cs-nav-name">{prev.label}</span>
-              </Link>
-            )}
-          </div>
-          <div className="cs-nav-side cs-nav-side--right">
-            {next && (
-              <Link href={next.href} className="cs-nav-link cs-nav-link--right">
-                <span className="cs-nav-direction">Next Project →</span>
-                <span className="cs-nav-name">{next.label}</span>
-              </Link>
-            )}
-          </div>
-        </nav>
+      {/* ── NEXT PROJECT NAV ── */}
+      {(prevProject || nextProject) && (
+        <div className="cs-nav">
+          {prevProject ? (
+            <Link href={prevProject.href} className="cs-nav-link cs-nav-link--prev">
+              <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" />
+              <span className="cs-nav-dir">Previous Project</span>
+              <span className="cs-nav-name">{prevProject.label}</span>
+            </Link>
+          ) : <div />}
+
+          {nextProject && (
+            <Link href={nextProject.href} className="cs-nav-link cs-nav-link--next">
+              <span className="cs-nav-dir">Next Project</span>
+              <span className="cs-nav-name">{nextProject.label}</span>
+              <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
       )}
 
-      {/* ── Scoped styles ── */}
+      {/* ── STYLES ── */}
       <style>{`
         .cs {
-          padding-top: 64px;
-          padding-bottom: 80px;
+          max-width: 720px;
+          margin: 0 auto;
+          padding: 48px 0 96px;
         }
 
         /* Back link */
+        .cs-back-wrap {
+          margin-bottom: 24px;
+        }
+
         .cs-back {
-          display: inline-block;
-          font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-family: var(--font-geist, "Geist", sans-serif);
+          font-size: 13px;
           color: var(--color-text-muted, #444444);
           text-decoration: none;
-          margin-bottom: 40px;
           transition: color 150ms ease;
         }
 
-        .cs-back:hover { color: var(--color-text-primary, #F0F0F0); }
+        .cs-back:hover {
+          color: var(--color-text-primary, #F0F0F0);
+        }
 
-        /* Thumbnail */
-        .cs-thumb {
+        /* Hero banner */
+        .cs-hero {
           width: 100%;
-          height: 240px;
-          border-radius: 8px;
-          border: 1px solid var(--color-border-subtle, #1F1F1F);
-          margin-bottom: 28px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 16px;
+          height: 260px;
+          border-radius: 12px;
+          margin-bottom: 24px;
           overflow: hidden;
         }
 
-        .cs-thumb-label {
-          font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 13px;
-          color: var(--color-text-muted, #444444);
-          letter-spacing: 0.04em;
-        }
-
-        /* Tags */
+        /* Tag pills */
         .cs-tags {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
-          list-style: none;
-          margin: 0 0 20px;
-          padding: 0;
+          gap: 8px;
+          margin-bottom: 20px;
         }
 
         .cs-tag {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
           font-size: 11px;
-          color: var(--color-text-muted, #444444);
-          background-color: var(--color-bg-inset, #1A1A1A);
+          color: var(--color-text-secondary, #888888);
+          background: var(--color-bg-inset, #1A1A1A);
           border: 1px solid var(--color-border-subtle, #1F1F1F);
-          border-radius: 4px;
-          padding: 4px 8px;
+          border-radius: 20px;
+          padding: 4px 12px;
           white-space: nowrap;
           line-height: 1;
         }
@@ -301,228 +234,222 @@ export default function CaseStudyLayout({
         /* Title */
         .cs-title {
           font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 30px;
+          font-size: 32px;
           font-weight: 700;
           color: var(--color-text-primary, #F0F0F0);
-          margin: 0 0 8px;
+          margin: 0 0 8px 0;
           line-height: 1.2;
         }
 
-        /* One-liner */
-        .cs-oneliner {
+        .cs-subtitle {
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 15px;
           color: var(--color-text-secondary, #888888);
-          margin: 0 0 24px;
           line-height: 1.6;
+          margin: 0 0 20px 0;
         }
 
-        /* Meta row */
-        .cs-meta {
+        /* Metadata row */
+        .cs-meta-row {
           display: flex;
           flex-wrap: wrap;
           gap: 0;
-          margin: 0;
-          padding: 0;
+          margin-bottom: 20px;
+          background: var(--color-bg-elevated, #0F0F0F);
+          border: 1px solid var(--color-border-subtle, #1F1F1F);
+          border-radius: 8px;
+          overflow: hidden;
         }
 
-        .cs-meta-cell {
-          padding-right: 24px;
-          margin-right: 24px;
+        .cs-meta-item {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          padding: 14px 20px;
           border-right: 1px solid var(--color-border-subtle, #1F1F1F);
+          flex: 1;
+          min-width: 100px;
         }
 
-        .cs-meta-cell--last {
+        .cs-meta-item:last-child {
           border-right: none;
-          padding-right: 0;
-          margin-right: 0;
         }
 
         .cs-meta-label {
-          display: block;
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
           font-size: 10px;
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--color-text-muted, #444444);
-          margin-bottom: 4px;
         }
 
         .cs-meta-value {
-          display: block;
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 13px;
           font-weight: 500;
           color: var(--color-text-primary, #F0F0F0);
+        }
+
+        .cs-meta-badge {
+          display: inline-block;
+          font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 10px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          border-radius: 20px;
+          padding: 3px 8px;
+          line-height: 1.4;
+          width: fit-content;
+        }
+
+        /* Action buttons */
+        .cs-actions {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-bottom: 32px;
+        }
+
+        .cs-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-family: var(--font-geist, "Geist", sans-serif);
+          font-size: 13px;
+          font-weight: 500;
+          border-radius: 7px;
+          padding: 9px 16px;
+          text-decoration: none;
+          transition: opacity 150ms ease, border-color 150ms ease;
           white-space: nowrap;
+        }
+
+        .cs-btn--primary {
+          color: #080808;
+          background: var(--color-accent, #4AFF91);
+          border: 1px solid var(--color-accent, #4AFF91);
+        }
+
+        .cs-btn--primary:hover { opacity: 0.88; }
+
+        .cs-btn--secondary {
+          color: var(--color-text-secondary, #888888);
+          background: var(--color-bg-elevated, #0F0F0F);
+          border: 1px solid var(--color-border-default, #2A2A2A);
+        }
+
+        .cs-btn--secondary:hover {
+          color: var(--color-text-primary, #F0F0F0);
+          border-color: var(--color-border-strong, #3A3A3A);
         }
 
         /* Divider */
         .cs-divider {
           height: 1px;
           background: var(--color-border-subtle, #1F1F1F);
-          margin: 28px 0 24px;
+          margin-bottom: 40px;
         }
 
-        /* CTA links */
-        .cs-ctas {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          margin-bottom: 48px;
-        }
-
-        .cs-cta-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 13px;
-          color: var(--color-text-secondary, #888888);
-          text-decoration: none;
-          transition: color 150ms ease;
-        }
-
-        .cs-cta-link:hover { color: var(--color-text-primary, #F0F0F0); }
-
-        /* Body */
+        /* Body prose */
         .cs-body {
-          margin-top: 48px;
-        }
-
-        /* Prev/next nav */
-        .cs-nav {
           display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          border-top: 1px solid var(--color-border-subtle, #1F1F1F);
-          padding-top: 40px;
-          margin-top: 32px;
-          gap: 24px;
-        }
-
-        .cs-nav-side { flex: 1; }
-        .cs-nav-side--right { text-align: right; }
-
-        .cs-nav-link {
-          display: inline-flex;
           flex-direction: column;
-          gap: 4px;
-          text-decoration: none;
-          transition: color 150ms ease;
+          gap: 40px;
         }
 
-        .cs-nav-link:hover .cs-nav-direction {
-          color: var(--color-accent, #4AFF91);
-        }
-
-        .cs-nav-direction {
+        /* ── Section heading used inside body ── */
+        .cs-section-title {
           font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 13px;
-          font-weight: 500;
+          font-size: 20px;
+          font-weight: 700;
           color: var(--color-text-primary, #F0F0F0);
-          transition: color 150ms ease;
+          margin: 0 0 16px 0;
+          line-height: 1.3;
         }
 
-        .cs-nav-name {
-          font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 12px;
-          color: var(--color-text-muted, #444444);
-        }
-
-        /* Section label utility (used by page children) */
-        .cs-section-label {
-          display: inline-block;
-          font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 10px;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--color-text-muted, #444444);
-          background-color: var(--color-bg-inset, #1A1A1A);
-          border-left: 2px solid var(--color-border-strong, #333333);
-          padding: 2px 8px;
-          margin-bottom: 16px;
-        }
-
-        /* Prose paragraphs (case study body text) */
-        .cs-prose {
+        /* ── Body prose paragraphs ── */
+        .cs-prose p {
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 15px;
           color: var(--color-text-secondary, #888888);
           line-height: 1.75;
-          margin-bottom: 48px;
+          margin: 0;
         }
 
-        .cs-prose p { margin: 0; }
-        .cs-prose p + p { margin-top: 16px; }
+        .cs-prose p + p {
+          margin-top: 16px;
+        }
 
-        /* Impact metric list */
-        .cs-metrics {
+        /* Next/Prev nav */
+        .cs-nav {
+          display: flex;
+          align-items: stretch;
+          justify-content: space-between;
+          gap: 16px;
+          border-top: 1px solid var(--color-border-subtle, #1F1F1F);
+          padding-top: 32px;
+          margin-top: 16px;
+        }
+
+        .cs-nav-link {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          margin-bottom: 48px;
-          list-style: none;
-          padding: 0;
-          margin-top: 0;
+          gap: 4px;
+          text-decoration: none;
+          padding: 16px 20px;
+          background: var(--color-bg-elevated, #0F0F0F);
+          border: 1px solid var(--color-border-subtle, #1F1F1F);
+          border-radius: 8px;
+          transition: border-color 150ms ease;
+          max-width: 280px;
         }
 
-        .cs-metric {
-          display: flex;
-          align-items: baseline;
-          gap: 12px;
+        .cs-nav-link:hover {
+          border-color: var(--color-border-default, #2A2A2A);
         }
 
-        .cs-metric-dash {
+        .cs-nav-link--next {
+          align-items: flex-end;
+          margin-left: auto;
+        }
+
+        .cs-nav-dir {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
           color: var(--color-text-muted, #444444);
-          font-size: 14px;
-          flex-shrink: 0;
         }
 
-        .cs-metric-text {
+        .cs-nav-name {
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 14px;
           font-weight: 500;
           color: var(--color-text-primary, #F0F0F0);
-          line-height: 1.5;
         }
 
-        /* Code block */
-        .cs-code {
-          background-color: var(--color-bg-inset, #1A1A1A);
-          border: 1px solid var(--color-border-subtle, #1F1F1F);
-          border-radius: 6px;
-          padding: 16px 20px;
-          margin-bottom: 24px;
-          overflow-x: auto;
+        /* Responsive */
+        @media (max-width: 640px) {
+          .cs-hero       { height: 180px; }
+          .cs-title      { font-size: 26px; }
+          .cs-meta-row   { flex-direction: column; }
+          .cs-meta-item  { border-right: none; border-bottom: 1px solid var(--color-border-subtle, #1F1F1F); }
+          .cs-meta-item:last-child { border-bottom: none; }
+          .cs-nav        { flex-direction: column; }
+          .cs-nav-link   { max-width: 100%; }
+          .cs-nav-link--next { align-items: flex-start; margin-left: 0; }
         }
 
-        .cs-code pre {
-          font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 12px;
-          color: var(--color-text-secondary, #888888);
-          line-height: 1.7;
-          margin: 0;
-          white-space: pre;
-        }
-
-        @media (max-width: 560px) {
-          .cs-meta { gap: 12px; }
-          .cs-meta-cell {
-            border-right: none;
-            padding-right: 0;
-            margin-right: 0;
-          }
-        }
-
+        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
-          .cs-back, .cs-cta-link, .cs-nav-link,
-          .cs-nav-direction { transition: none; }
+          .cs-back    { transition: none; }
+          .cs-btn     { transition: none; }
+          .cs-nav-link { transition: none; }
         }
       `}</style>
     </article>
   );
 }
+
