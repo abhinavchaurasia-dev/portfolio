@@ -220,7 +220,7 @@ export default function Hero() {
       <div className="hero-photo-wrap" aria-hidden="true">
         <div className="hero-photo-ring" />
         <Image
-          src="/abhinav.jpg"
+          src="/abhinav.webp"
           alt="Abhinav Chaurasia"
           width={80}
           height={80}

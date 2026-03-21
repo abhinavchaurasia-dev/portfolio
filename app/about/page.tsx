@@ -35,7 +35,7 @@ export default function AboutPage() {
         <SectionReveal delay={0.02}>
           <div className="ab-photo-wrap" aria-hidden="true">
             <Image
-              src="/abhinav.jpg"
+              src="/abhinav.webp"
               alt="Abhinav Chaurasia"
               width={72}
               height={72}
