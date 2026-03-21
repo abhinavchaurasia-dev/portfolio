@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Copy, Check } from "lucide-react";
 
 /* ============================================================
-   CODE BLOCK
-   Used in MDX content as <CodeBlock language="js">...</CodeBlock>
-   and also accepts children as a string from MDX code fences.
-   Copy button reverts after 2s.
+   FILE: components/mdx/CodeBlock.tsx
+
+   Syntax highlighting via highlight.js (loaded from CDN once).
+   Token colours match the dark design system — no external
+   theme import needed, overridden inline below.
    ============================================================ */
 
 interface CodeBlockProps {
@@ -16,21 +17,57 @@ interface CodeBlockProps {
   filename?: string;
 }
 
-export default function CodeBlock({
-  children,
-  language,
-  filename,
-}: CodeBlockProps) {
-  const [copied, setCopied] = useState(false);
+/* Load hljs once into window */
+let hljsLoaded = false;
+let hljsLoading = false;
+const hljsCallbacks: Array<() => void> = [];
 
-  const code = typeof children === "string" ? children.trimEnd() : "";
+function loadHljs(cb: () => void) {
+  if (hljsLoaded) { cb(); return; }
+  hljsCallbacks.push(cb);
+  if (hljsLoading) return;
+  hljsLoading = true;
+
+  const script = document.createElement("script");
+  script.src = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js";
+  script.onload = () => {
+    hljsLoaded = true;
+    hljsLoading = false;
+    hljsCallbacks.forEach((fn) => fn());
+    hljsCallbacks.length = 0;
+  };
+  document.head.appendChild(script);
+}
+
+export default function CodeBlock({ children, language, filename }: CodeBlockProps) {
+  const [copied, setCopied]       = useState(false);
+  const [highlighted, setHighlighted] = useState<string>("");
+  const codeRef = useRef<HTMLElement>(null);
+
+  const raw = typeof children === "string" ? children.trimEnd() : "";
+  const label = filename ?? language ?? "";
+
+  /* Highlight after hljs loads */
+  useEffect(() => {
+    loadHljs(() => {
+      const hljs = (window as any).hljs;
+      if (!hljs) return;
+
+      let result: string;
+      if (language && hljs.getLanguage(language)) {
+        result = hljs.highlight(raw, { language }).value;
+      } else {
+        result = hljs.highlightAuto(raw).value;
+      }
+      setHighlighted(result);
+    });
+  }, [raw, language]);
 
   const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-    } catch {
+    try { await navigator.clipboard.writeText(raw); }
+    catch {
       const el = document.createElement("textarea");
-      el.value = code;
+      el.value = raw;
       el.style.cssText = "position:fixed;opacity:0";
       document.body.appendChild(el);
       el.select();
@@ -39,78 +76,66 @@ export default function CodeBlock({
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [code]);
+  }, [raw]);
 
   return (
     <div className="cb">
-      {/* Header bar — only shown when language or filename is present */}
-      {(language || filename) && (
-        <div className="cb-header">
-          <span className="cb-lang">{filename ?? language}</span>
-          <button
-            className="cb-copy"
-            onClick={handleCopy}
-            aria-label={copied ? "Copied" : "Copy code"}
-          >
-            {copied ? (
-              <Check size={13} strokeWidth={1.5} />
-            ) : (
-              <Copy size={13} strokeWidth={1.5} />
-            )}
-            <span>{copied ? "Copied" : "Copy"}</span>
-          </button>
-        </div>
-      )}
-
-      {/* No header — floating copy button in corner */}
-      {!language && !filename && (
+      {/* Header */}
+      <div className="cb-header">
+        <span className="cb-lang">{label || "code"}</span>
         <button
-          className="cb-copy cb-copy--floating"
+          className={`cb-copy-btn ${copied ? "cb-copy-btn--ok" : ""}`}
           onClick={handleCopy}
           aria-label={copied ? "Copied" : "Copy code"}
         >
-          {copied ? (
-            <Check size={13} strokeWidth={1.5} />
-          ) : (
-            <Copy size={13} strokeWidth={1.5} />
-          )}
+          {copied ? <Check size={12} strokeWidth={1.5} /> : <Copy size={12} strokeWidth={1.5} />}
+          <span>{copied ? "Copied" : "Copy"}</span>
         </button>
-      )}
+      </div>
 
+      {/* Code */}
       <pre className="cb-pre">
-        <code className="cb-code">{code}</code>
+        <code
+          ref={codeRef}
+          className={`cb-code ${highlighted ? "cb-code--hl" : ""}`}
+          dangerouslySetInnerHTML={highlighted ? { __html: highlighted } : undefined}
+        >
+          {!highlighted ? raw : undefined}
+        </code>
       </pre>
 
+      {/* Syntax token colours — mapped to design system */}
       <style>{`
         .cb {
           position: relative;
-          background-color: var(--color-bg-inset, #1A1A1A);
+          background: var(--color-bg-inset, #1A1A1A);
           border: 1px solid var(--color-border-subtle, #1F1F1F);
-          border-radius: 6px;
-          margin: 24px 0;
+          border-radius: 8px;
+          margin: 28px 0;
           overflow: hidden;
         }
 
-        /* Header bar */
+        /* Header */
         .cb-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 8px 16px;
           border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
+          background: var(--color-bg-overlay, #141414);
         }
 
         .cb-lang {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
           font-size: 10px;
+          font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: var(--color-text-muted, #444444);
           user-select: none;
         }
 
-        /* Copy button */
-        .cb-copy {
+        .cb-copy-btn {
           display: inline-flex;
           align-items: center;
           gap: 4px;
@@ -120,47 +145,83 @@ export default function CodeBlock({
           background: transparent;
           border: none;
           cursor: pointer;
-          padding: 2px 4px;
+          padding: 2px 6px;
           border-radius: 3px;
           transition: color 150ms ease;
         }
+        .cb-copy-btn:hover { color: var(--color-text-secondary, #888888); }
+        .cb-copy-btn--ok   { color: var(--color-accent, #4AFF91) !important; }
 
-        .cb-copy:hover { color: var(--color-text-secondary, #888888); }
-
-        /* Floating copy (no header) */
-        .cb-copy--floating {
-          position: absolute;
-          top: 10px;
-          right: 12px;
-          z-index: 1;
-          opacity: 0;
-          transition: opacity 150ms ease, color 150ms ease;
-        }
-
-        .cb:hover .cb-copy--floating { opacity: 1; }
-
-        /* Code */
+        /* Pre / code */
         .cb-pre {
           margin: 0;
-          padding: 16px 20px;
+          padding: 18px 20px;
           overflow-x: auto;
           scrollbar-width: thin;
           scrollbar-color: var(--color-border-default, #2A2A2A) transparent;
         }
+        .cb-pre::-webkit-scrollbar        { height: 4px; }
+        .cb-pre::-webkit-scrollbar-thumb  { background: var(--color-border-default,#2A2A2A); border-radius:2px; }
 
         .cb-code {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 12px;
-          color: var(--color-text-secondary, #888888);
-          line-height: 1.7;
+          font-size: 12.5px;
+          line-height: 1.75;
           white-space: pre;
           background: transparent;
+          color: var(--color-text-secondary, #888888);
         }
 
+        /* ── Highlight.js token overrides ──
+           Mapped to design system colours.
+           Base text:    #888888 (--text-secondary)
+           Keywords:     #4AFF91 (accent)
+           Strings:      #98C379 (soft green)
+           Numbers:      #E5C07B (amber)
+           Comments:     #444444 (--text-muted) italic
+           Functions:    #61AFEF (blue)
+           Builtins:     #C678DD (purple)
+           Params/attrs: #ABB2BF
+           Tags:         #E06C75 (red)
+        ── */
+        .cb-code--hl .hljs-keyword,
+        .cb-code--hl .hljs-selector-tag,
+        .cb-code--hl .hljs-built_in,
+        .cb-code--hl .hljs-name          { color: #4AFF91; }
+
+        .cb-code--hl .hljs-string,
+        .cb-code--hl .hljs-attr          { color: #98C379; }
+
+        .cb-code--hl .hljs-number,
+        .cb-code--hl .hljs-literal       { color: #E5C07B; }
+
+        .cb-code--hl .hljs-comment,
+        .cb-code--hl .hljs-quote         { color: #444444; font-style: italic; }
+
+        .cb-code--hl .hljs-title,
+        .cb-code--hl .hljs-section,
+        .cb-code--hl .hljs-function      { color: #61AFEF; }
+
+        .cb-code--hl .hljs-variable,
+        .cb-code--hl .hljs-template-variable { color: #E06C75; }
+
+        .cb-code--hl .hljs-type,
+        .cb-code--hl .hljs-class         { color: #C678DD; }
+
+        .cb-code--hl .hljs-params,
+        .cb-code--hl .hljs-meta          { color: #ABB2BF; }
+
+        .cb-code--hl .hljs-symbol,
+        .cb-code--hl .hljs-bullet        { color: #E5C07B; }
+
+        .cb-code--hl .hljs-addition      { color: #98C379; background: #98c37920; }
+        .cb-code--hl .hljs-deletion      { color: #E06C75; background: #e06c7520; }
+
         @media (prefers-reduced-motion: reduce) {
-          .cb-copy, .cb-copy--floating { transition: none; }
+          .cb-copy-btn { transition: none; }
         }
       `}</style>
     </div>
   );
 }
+
