@@ -101,6 +101,7 @@ export default function CommandPalette() {
   const [theme, setTheme]         = useState<"dark" | "light">("dark");
   const [mounted, setMounted]     = useState(false);
   const containerRef              = useRef<HTMLDivElement>(null);
+  const triggerRef                = useRef<HTMLElement | null>(null);
 
   /* Sync theme label after mount */
   useEffect(() => {
@@ -109,20 +110,38 @@ export default function CommandPalette() {
   }, []);
 
   /* ── Open helpers ── */
-  const openPalette  = useCallback(() => setOpen(true),  []);
-  const closePalette = useCallback(() => setOpen(false), []);
+  const openPalette = useCallback(() => {
+    triggerRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    setOpen(true);
+  }, []);
+
+  const closePalette = useCallback(() => {
+    setOpen(false);
+    requestAnimationFrame(() => {
+      if (triggerRef.current && document.contains(triggerRef.current)) {
+        triggerRef.current.focus();
+      }
+    });
+  }, []);
 
   /* ── Keyboard: ⌘K / Ctrl+K ── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
+        if (!open) {
+          triggerRef.current = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        }
         setOpen((prev) => !prev);
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [open]);
 
   /* ── Custom event from Nav search button ── */
   useEffect(() => {
@@ -135,6 +154,81 @@ export default function CommandPalette() {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  /* ── Focus first command item and trap tab focus inside palette ── */
+  useEffect(() => {
+    if (!open) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const focusFirst = () => {
+      const firstItem = container.querySelector<HTMLElement>("[cmdk-item]");
+      if (firstItem) {
+        firstItem.focus();
+        return;
+      }
+      const input = container.querySelector<HTMLElement>("[cmdk-input]");
+      input?.focus();
+    };
+
+    const getFocusable = (): HTMLElement[] => {
+      const selectors = [
+        "[cmdk-input]",
+        "[cmdk-item]",
+        "button",
+        "a[href]",
+        "input",
+        "select",
+        "textarea",
+        "[tabindex]:not([tabindex='-1'])",
+      ].join(",");
+
+      return Array.from(container.querySelectorAll<HTMLElement>(selectors)).filter((el) => {
+        if (el.hasAttribute("disabled")) return false;
+        if (el.getAttribute("aria-hidden") === "true") return false;
+        return true;
+      });
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closePalette();
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (!active || !container.contains(active)) {
+        e.preventDefault();
+        first.focus();
+        return;
+      }
+
+      if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+        return;
+      }
+
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    };
+
+    requestAnimationFrame(focusFirst);
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, closePalette]);
 
   /* ── Run a command ── */
   const run = useCallback(
@@ -252,7 +346,13 @@ export default function CommandPalette() {
           />
 
           {/* ── Panel ── */}
-          <div className="cp-container" ref={containerRef}>
+          <div
+            className="cp-container"
+            ref={containerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Command palette"
+          >
             <Command
               className="cp-root"
               label="Command palette"

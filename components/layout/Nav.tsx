@@ -146,6 +146,7 @@ export default function Nav() {
                 <Link
                   href={href}
                   className={`nav-link${isActive(href) ? " nav-link--active" : ""}`}
+                  aria-current={isActive(href) ? "page" : undefined}
                 >
                   {label}
                 </Link>
@@ -232,6 +233,7 @@ export default function Nav() {
                 <Link
                   href={href}
                   className={`drawer-link${isActive(href) ? " drawer-link--active" : ""}`}
+                  aria-current={isActive(href) ? "page" : undefined}
                   onClick={() => setDrawerOpen(false)}
                 >
                   {label}
