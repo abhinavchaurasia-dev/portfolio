@@ -30,16 +30,12 @@ function getRedis(): Redis | null {
 }
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const headerKey = req.headers.get("x-admin-key");
-  if (headerKey === secret) return true;
-  const queryKey = new URL(req.url).searchParams.get("key");
-  return queryKey === secret;
+  const authHeader = req.headers.get("x-admin-key");
+  return authHeader === process.env.ADMIN_SECRET;
 }
 
 function unauthorized() {
-  return Response.json({ error: "Unauthorized" }, { status: 401 });
+  return new Response("Unauthorized", { status: 401 });
 }
 
 /* ── POST — go live (writes both keys) ── */
@@ -64,13 +60,21 @@ export async function POST(req: NextRequest) {
     albumArt: albumArt.trim(),
   };
 
-  // Store as native JSON — Upstash handles serialization
-  await Promise.all([
-    redis.set(KEY_LIVE, track),
-    redis.set(KEY_LAST, track),
-  ]);
+  try {
+    // Store as native JSON — Upstash handles serialization
+    await Promise.all([
+      redis.set(KEY_LIVE, track),
+      redis.set(KEY_LAST, track),
+    ]);
 
-  return Response.json({ ok: true, track, isLive: true });
+    return Response.json({ ok: true, track, isLive: true });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
+  }
 }
 
 /* ── DELETE — stop live, keep last played ── */
@@ -80,9 +84,17 @@ export async function DELETE(req: NextRequest) {
   const redis = getRedis();
   if (!redis) return Response.json({ error: "Redis not configured" }, { status: 500 });
 
-  // Only clear the live key — last-played stays frozen
-  await redis.del(KEY_LIVE);
-  return Response.json({ ok: true, isLive: false });
+  try {
+    // Only clear the live key — last-played stays frozen
+    await redis.del(KEY_LIVE);
+    return Response.json({ ok: true, isLive: false });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
+  }
 }
 
 /* ── GET — read both keys (admin UI state) ── */

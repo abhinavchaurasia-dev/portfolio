@@ -40,15 +40,12 @@ function getRedis(): Redis | null {
 }
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const headerKey = req.headers.get("x-admin-key");
-  if (headerKey === secret) return true;
-  return new URL(req.url).searchParams.get("key") === secret;
+  const authHeader = req.headers.get("x-admin-key");
+  return authHeader === process.env.ADMIN_SECRET;
 }
 
 function unauthorized() {
-  return Response.json({ error: "Unauthorized" }, { status: 401 });
+  return new Response("Unauthorized", { status: 401 });
 }
 
 /* ── GET — public, no auth ── */
@@ -92,9 +89,17 @@ export async function POST(req: NextRequest) {
   const redis = getRedis();
   if (!redis) return Response.json({ error: "Redis not configured" }, { status: 500 });
 
-  // Store as native JSON (Upstash handles serialization)
-  await redis.set(REDIS_KEY, valid);
-  return Response.json({ ok: true, items: valid });
+  try {
+    // Store as native JSON (Upstash handles serialization)
+    await redis.set(REDIS_KEY, valid);
+    return Response.json({ ok: true, items: valid });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
+  }
 }
 
 /* ── DELETE — remove single item by id ── */
@@ -112,8 +117,12 @@ export async function DELETE(req: NextRequest) {
     const updated = items.filter((i) => i.id !== id);
     await redis.set(REDIS_KEY, updated);
     return Response.json({ ok: true, items: updated });
-  } catch {
-    return Response.json({ error: "Failed" }, { status: 500 });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
   }
 }
 

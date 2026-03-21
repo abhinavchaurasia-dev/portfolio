@@ -24,15 +24,12 @@ function getRedis(): Redis | null {
 }
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const headerKey = req.headers.get("x-admin-key");
-  if (headerKey === secret) return true;
-  return new URL(req.url).searchParams.get("key") === secret;
+  const authHeader = req.headers.get("x-admin-key");
+  return authHeader === process.env.ADMIN_SECRET;
 }
 
 function unauthorized() {
-  return Response.json({ error: "Unauthorized" }, { status: 401 });
+  return new Response("Unauthorized", { status: 401 });
 }
 
 export async function GET(req: NextRequest) {
@@ -59,7 +56,15 @@ export async function POST(req: NextRequest) {
   const redis = getRedis();
   if (!redis) return Response.json({ error: "Redis not configured" }, { status: 500 });
 
-  await redis.set(TOGGLE_KEY, body.isLive ? "1" : "0");
-  return Response.json({ ok: true, isLive: body.isLive });
+  try {
+    await redis.set(TOGGLE_KEY, body.isLive ? "1" : "0");
+    return Response.json({ ok: true, isLive: body.isLive });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
+  }
 }
 

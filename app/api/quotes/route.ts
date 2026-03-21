@@ -37,15 +37,12 @@ function getRedis(): Redis | null {
 }
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const headerKey = req.headers.get("x-admin-key");
-  if (headerKey === secret) return true;
-  return new URL(req.url).searchParams.get("key") === secret;
+  const authHeader = req.headers.get("x-admin-key");
+  return authHeader === process.env.ADMIN_SECRET;
 }
 
 function unauthorized() {
-  return Response.json({ error: "Unauthorized" }, { status: 401 });
+  return new Response("Unauthorized", { status: 401 });
 }
 
 /* ── GET — public ── */
@@ -87,8 +84,16 @@ export async function POST(req: NextRequest) {
   const redis = getRedis();
   if (!redis) return Response.json({ error: "Redis not configured" }, { status: 500 });
 
-  await redis.set(REDIS_KEY, valid);
-  return Response.json({ ok: true, quotes: valid });
+  try {
+    await redis.set(REDIS_KEY, valid);
+    return Response.json({ ok: true, quotes: valid });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
+  }
 }
 
 /* ── DELETE — remove single quote by id ── */
@@ -106,8 +111,12 @@ export async function DELETE(req: NextRequest) {
     const updated = quotes.filter((q) => q.id !== id);
     await redis.set(REDIS_KEY, updated);
     return Response.json({ ok: true, quotes: updated });
-  } catch {
-    return Response.json({ error: "Failed" }, { status: 500 });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
   }
 }
 

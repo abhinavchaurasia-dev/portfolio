@@ -1,15 +1,14 @@
 // FILE: app/admin/currently-into/page.tsx
-// PAGE URL: /admin/currently-into?key=YOUR_SECRET
+// PAGE URL: /admin/currently-into
 
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import { Plus, Trash2, Check, ExternalLink } from "lucide-react";
 
 /* ============================================================
    CURRENTLY INTO ADMIN PAGE
-   Private: /admin/currently-into?key=YOUR_SECRET
+  Private: /admin/currently-into
    
    - Shows current items with delete per item
    - Form to add new item (category + label + optional sub)
@@ -48,8 +47,8 @@ const SUB_EXAMPLES: Record<Category, string> = {
 };
 
 export default function AdminCurrentlyIntoPage() {
-  const searchParams = useSearchParams();
-  const secretKey    = searchParams.get("key") ?? "";
+  const [secretKey, setSecretKey] = useState("");
+  const [secretInput, setSecretInput] = useState("");
 
   const [items, setItems]       = useState<Item[]>([]);
   const [category, setCategory] = useState<Category>("reading");
@@ -57,6 +56,23 @@ export default function AdminCurrentlyIntoPage() {
   const [sub, setSub]           = useState("");
   const [status, setStatus]     = useState<Status>({ type: "idle", message: "" });
   const [loading, setLoading]   = useState(false);
+
+  useEffect(() => {
+    const storedKey = window.sessionStorage.getItem("admin-secret") ?? "";
+    setSecretKey(storedKey);
+    setSecretInput(storedKey);
+  }, []);
+
+  function saveSecret() {
+    const trimmed = secretInput.trim();
+    if (!trimmed) {
+      flashStatus("error", "Secret key is required");
+      return;
+    }
+    window.sessionStorage.setItem("admin-secret", trimmed);
+    setSecretKey(trimmed);
+    flashStatus("success", "Secret key saved for this session");
+  }
 
   function flashStatus(type: Status["type"], message: string) {
     setStatus({ type, message });
@@ -67,7 +83,9 @@ export default function AdminCurrentlyIntoPage() {
   const fetchItems = useCallback(async () => {
     if (!secretKey) return;
     try {
-      const res = await fetch(`/api/currently-into?key=${secretKey}`);
+      const res = await fetch("/api/currently-into", {
+        headers: { "x-admin-key": secretKey },
+      });
       if (res.status === 401) return;
       const data = await res.json() as { items: Item[] };
       setItems(data.items ?? []);
@@ -78,6 +96,10 @@ export default function AdminCurrentlyIntoPage() {
 
   /* ── Add item ── */
   async function handleAdd() {
+    if (!secretKey) {
+      flashStatus("error", "Secret key is required");
+      return;
+    }
     if (!label.trim()) {
       flashStatus("error", "Label is required");
       return;
@@ -124,6 +146,10 @@ export default function AdminCurrentlyIntoPage() {
 
   /* ── Remove item ── */
   async function handleRemove(id: string) {
+    if (!secretKey) {
+      flashStatus("error", "Secret key is required");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/currently-into?id=${id}`, {
@@ -147,7 +173,19 @@ export default function AdminCurrentlyIntoPage() {
   if (!secretKey) {
     return (
       <div className="adm-gate">
-        <p>Access denied. Secret key required.</p>
+        <div className="adm-gate-card">
+          <p>Enter admin secret key</p>
+          <input
+            className="adm-gate-input"
+            type="password"
+            value={secretInput}
+            onChange={(e) => setSecretInput(e.target.value)}
+            placeholder="Admin secret"
+            autoComplete="off"
+            onKeyDown={(e) => { if (e.key === "Enter") saveSecret(); }}
+          />
+          <button className="adm-gate-submit" onClick={saveSecret}>Continue</button>
+        </div>
       </div>
     );
   }
@@ -277,10 +315,50 @@ export default function AdminCurrentlyIntoPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #444;
-          font-size: 13px;
-          font-family: monospace;
+          padding: 24px;
         }
+        .adm-gate-card {
+          width: 100%;
+          max-width: 360px;
+          border: 1px solid #1F1F1F;
+          background: #0F0F0F;
+          border-radius: 8px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .adm-gate-card p {
+          margin: 0;
+          color: #888;
+          font-size: 12px;
+          font-family: "Geist Mono", monospace;
+        }
+        .adm-gate-input {
+          width: 100%;
+          height: 36px;
+          border: 1px solid #2A2A2A;
+          border-radius: 6px;
+          background: #141414;
+          color: #F0F0F0;
+          font-size: 13px;
+          padding: 0 10px;
+          outline: none;
+        }
+        .adm-gate-input:focus { border-color: #3A3A3A; }
+        .adm-gate-submit {
+          height: 34px;
+          border: 1px solid #2A2A2A;
+          border-radius: 6px;
+          background: #1A1A1A;
+          color: #F0F0F0;
+          font-size: 12px;
+          font-family: "Geist Mono", monospace;
+          cursor: pointer;
+          transition: border-color 150ms ease;
+        }
+        .adm-gate-submit:hover { border-color: #3A3A3A; }
+        .adm-gate-submit:active { opacity: 0.9; }
 
         .adm {
           max-width: 480px;

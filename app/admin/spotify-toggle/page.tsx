@@ -1,6 +1,6 @@
 /*
  * FILE: app/admin/spotify-toggle/page.tsx
- * PAGE URL: /admin/spotify-toggle?key=YOUR_SECRET
+ * PAGE URL: /admin/spotify-toggle
  * ============================================================
  * SPOTIFY TOGGLE ADMIN — Option A (Spotify Premium) ONLY
  * It does nothing until you:
@@ -11,27 +11,44 @@
  *   - Toggle ON  → live tracking enabled, widget shows real-time
  *   - Toggle OFF → live tracking disabled, widget shows last played
  *
- * Bookmark: https://yourdomain.com/admin/spotify-toggle?key=SECRET
+ * Bookmark: https://yourdomain.com/admin/spotify-toggle
  * ============================================================
  */
 
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 
 export default function SpotifyTogglePage() {
-  const searchParams          = useSearchParams();
-  const secretKey             = searchParams.get("key") ?? "";
+  const [secretKey, setSecretKey] = useState("");
+  const [secretInput, setSecretInput] = useState("");
   const [isLive, setIsLive]   = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus]   = useState("");
 
+  useEffect(() => {
+    const storedKey = window.sessionStorage.getItem("admin-secret") ?? "";
+    setSecretKey(storedKey);
+    setSecretInput(storedKey);
+  }, []);
+
+  function saveSecret() {
+    const trimmed = secretInput.trim();
+    if (!trimmed) {
+      setStatus("Secret key is required");
+      return;
+    }
+    window.sessionStorage.setItem("admin-secret", trimmed);
+    setSecretKey(trimmed);
+    setStatus("");
+  }
   const fetchState = useCallback(async () => {
     if (!secretKey) return;
     try {
-      const res  = await fetch(`/api/admin/spotify-toggle?key=${secretKey}`);
+      const res  = await fetch("/api/admin/spotify-toggle", {
+        headers: { "x-admin-key": secretKey },
+      });
       if (res.status === 401) return;
       const data = await res.json() as { isLive: boolean };
       setIsLive(data.isLive);
@@ -41,6 +58,10 @@ export default function SpotifyTogglePage() {
   useEffect(() => { fetchState(); }, [fetchState]);
 
   async function handleToggle() {
+    if (!secretKey) {
+      setStatus("Secret key is required");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/admin/spotify-toggle", {
@@ -68,10 +89,21 @@ export default function SpotifyTogglePage() {
 
   if (!secretKey) {
     return (
-      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center",
-        justifyContent:"center", background:"#080808", color:"#444",
-        fontFamily:"monospace", fontSize:"13px" }}>
-        Access denied. Secret key required.
+      <div className="st-gate">
+        <div className="st-gate-card">
+          <p>Enter admin secret key</p>
+          <input
+            className="st-gate-input"
+            type="password"
+            value={secretInput}
+            onChange={(e) => setSecretInput(e.target.value)}
+            placeholder="Admin secret"
+            autoComplete="off"
+            onKeyDown={(e) => { if (e.key === "Enter") saveSecret(); }}
+          />
+          <button className="st-gate-submit" onClick={saveSecret}>Continue</button>
+          {status && <span className="st-gate-status">{status}</span>}
+        </div>
       </div>
     );
   }
@@ -123,6 +155,60 @@ export default function SpotifyTogglePage() {
       <style>{`
         * { box-sizing: border-box; }
         body { background: #080808; margin: 0; font-family: "Geist", -apple-system, sans-serif; }
+
+        .st-gate {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+        .st-gate-card {
+          width: 100%;
+          max-width: 360px;
+          border: 1px solid #1F1F1F;
+          background: #0F0F0F;
+          border-radius: 8px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .st-gate-card p {
+          margin: 0;
+          color: #888;
+          font-size: 12px;
+          font-family: "Geist Mono", monospace;
+        }
+        .st-gate-input {
+          width: 100%;
+          height: 36px;
+          border: 1px solid #2A2A2A;
+          border-radius: 6px;
+          background: #141414;
+          color: #F0F0F0;
+          font-size: 13px;
+          padding: 0 10px;
+          outline: none;
+        }
+        .st-gate-input:focus { border-color: #3A3A3A; }
+        .st-gate-submit {
+          height: 34px;
+          border: 1px solid #2A2A2A;
+          border-radius: 6px;
+          background: #1A1A1A;
+          color: #F0F0F0;
+          font-size: 12px;
+          font-family: "Geist Mono", monospace;
+          cursor: pointer;
+          transition: border-color 150ms ease;
+        }
+        .st-gate-submit:hover { border-color: #3A3A3A; }
+        .st-gate-status {
+          font-size: 11px;
+          color: #FF6B6B;
+          font-family: "Geist Mono", monospace;
+        }
 
         .st { max-width: 400px; margin: 0 auto; padding: 48px 24px; display: flex; flex-direction: column; gap: 24px; }
 
