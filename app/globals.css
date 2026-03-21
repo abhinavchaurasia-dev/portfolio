@@ -19,8 +19,8 @@
   /* --- Text --- */
   --color-text-primary:   #F0F0F0;
   --color-text-secondary: #888888;
-  --color-text-muted:     #444444;
-  --color-text-mono:      #666666;
+  --color-text-muted:     #6B6B6B;
+  --color-text-mono:      #888888;
 
   /* --- Accent (max 4x per page) --- */
   --color-accent:         #4AFF91;
