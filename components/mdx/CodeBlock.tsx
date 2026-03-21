@@ -17,6 +17,20 @@ interface CodeBlockProps {
   filename?: string;
 }
 
+interface HljsResult {
+  value: string;
+}
+
+interface HljsApi {
+  getLanguage: (languageName: string) => unknown;
+  highlight: (code: string, options: { language: string }) => HljsResult;
+  highlightAuto: (code: string) => HljsResult;
+}
+
+interface ExtendedWindow extends Window {
+  hljs?: HljsApi;
+}
+
 /* Load hljs once into window */
 let hljsLoaded = false;
 let hljsLoading = false;
@@ -50,7 +64,7 @@ export default function CodeBlock({ children, language, filename }: CodeBlockPro
   /* Highlight after hljs loads */
   useEffect(() => {
     loadHljs(() => {
-      const hljs = (window as any).hljs;
+      const hljs = (window as ExtendedWindow).hljs;
       if (!hljs) return;
 
       let result: string;
