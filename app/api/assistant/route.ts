@@ -288,9 +288,14 @@ export async function POST(req: NextRequest) {
   ── */
   const encoder = new TextEncoder();
 
+  const responseBody = openRouterRes.body;
+  if (!responseBody) {
+    return new Response("Stream unavailable", { status: 502 });
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
-      const reader  = openRouterRes.body!.getReader();
+      const reader  = responseBody.getReader();
       const decoder = new TextDecoder();
       let   buffer  = "";
 

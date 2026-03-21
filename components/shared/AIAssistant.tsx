@@ -143,7 +143,13 @@ export default function AIAssistant() {
          Format: 0:"token"\n
          We accumulate and update the assistant bubble in place.
       */
-      const reader  = res.body!.getReader();
+      if (!res.body) {
+        setError("Stream unavailable. Please try again.");
+        setMessages(prev => prev.filter(m => m.id !== assistantId));
+        return;
+      }
+
+      const reader  = res.body.getReader();
       const decoder = new TextDecoder();
       let   accumulated = "";
 
