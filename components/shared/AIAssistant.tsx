@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { useRef, useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, X, ArrowRight } from "lucide-react";
@@ -24,14 +26,41 @@ const QUICK_QUESTIONS = [
   "Are you open to internships?",
 ] as const;
 
+const EASE_OUT = [0.0, 0.0, 0.2, 1.0] as const;
+const EASE_IN = [0.4, 0.0, 1.0, 1.0] as const;
+
 const panelVariants = {
   hidden:  { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0,  transition: { duration: 0.25, ease: [0, 0, 0.2, 1] } },
-  exit:    { opacity: 0, y: 12, transition: { duration: 0.15, ease: [0.4, 0, 1, 1]  } },
+  visible: { opacity: 1, y: 0,  transition: { duration: 0.25, ease: EASE_OUT } },
+  exit:    { opacity: 0, y: 12, transition: { duration: 0.15, ease: EASE_IN } },
 };
 
 function uid() {
   return Math.random().toString(36).slice(2, 9);
+}
+
+/* Minimal markdown renderer — bold, inline code, newlines only */
+function renderContent(text: string): React.ReactNode {
+  const lines = text.split("\n");
+  return lines.map((line, li) => {
+    // Split on **bold** and `code` patterns
+    const parts = line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+    const nodes = parts.map((part, pi) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={pi} style={{ color: "var(--color-text-primary, #F0F0F0)", fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith("`") && part.endsWith("`")) {
+        return <code key={pi} style={{ fontFamily: "Geist Mono, monospace", fontSize: "11px", background: "var(--color-bg-inset, #1A1A1A)", padding: "1px 5px", borderRadius: "3px" }}>{part.slice(1, -1)}</code>;
+      }
+      return <span key={pi}>{part}</span>;
+    });
+    return (
+      <span key={li}>
+        {nodes}
+        {li < lines.length - 1 && <br />}
+      </span>
+    );
+  });
 }
 
 export default function AIAssistant() {
@@ -213,7 +242,7 @@ export default function AIAssistant() {
               {!hasMessages && (
                 <div className="aia-greeting">
                   <p className="aia-greeting-text">
-                    Ask me anything about Abhinav&rsquo;s projects, stack, or availability.
+                    Ask about projects, work experience, stack, or availability.
                   </p>
                 </div>
               )}
@@ -223,7 +252,7 @@ export default function AIAssistant() {
                   key={m.id}
                   className={`aia-bubble aia-bubble--${m.role}`}
                 >
-                  {m.content || (
+                  {m.content ? renderContent(m.content) : (
                     m.role === "assistant" && loading ? (
                       <span className="aia-typing" aria-label="Thinking">
                         <span /><span /><span />
@@ -263,6 +292,7 @@ export default function AIAssistant() {
               <input
                 ref={inputRef}
                 className="aia-input"
+                aria-label="Ask about Abhinav's work"
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder="Ask about my work..."
@@ -540,4 +570,3 @@ export default function AIAssistant() {
     </>
   );
 }
-

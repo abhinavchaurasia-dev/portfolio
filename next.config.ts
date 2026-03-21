@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 /* ============================================================
    NEXT.JS CONFIG
@@ -46,8 +47,6 @@ const nextConfig: NextConfig = {
   experimental: {
     // Optimise CSS (requires critters package if using App Router CSS-in-JS)
     optimizeCss: false,
-    // Turbopack stable in Next 15
-    turbo: {},
   },
 
   /* ── Security & perf headers ── */
@@ -64,6 +63,22 @@ const nextConfig: NextConfig = {
           { key: "X-XSS-Protection",          value: "1; mode=block"    },
           /* Referrer policy */
           { key: "Referrer-Policy",           value: "strict-origin-when-cross-origin" },
+          /* Content Security Policy */
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https:",
+              "media-src 'self'",
+              "connect-src 'self' https://api.openai.com https://openrouter.ai https://*.upstash.io wss://*.upstash.io",
+              "frame-ancestors 'none'",
+              "object-src 'none'",
+              "base-uri 'self'",
+            ].join("; "),
+          },
           /* Permissions policy — disable unused APIs */
           {
             key:   "Permissions-Policy",
@@ -118,8 +133,7 @@ const nextConfig: NextConfig = {
 /* ── Bundle analyser ── */
 // Run: ANALYZE=true npm run build
 // Requires: npm install -D @next/bundle-analyzer
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const withBundleAnalyzer = require("@next/bundle-analyzer")({
+const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
