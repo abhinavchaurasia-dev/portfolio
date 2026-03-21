@@ -109,7 +109,7 @@ export default function AIAssistant() {
         );
       }
 
-      /* ── Stream parsing ── 
+      /* ── Stream parsing ──
          Vercel AI SDK streams lines prefixed with "0:" (text delta)
          Format: 0:"token"\n
          We accumulate and update the assistant bubble in place.
@@ -127,9 +127,8 @@ export default function AIAssistant() {
 
         for (const line of lines) {
           if (line.startsWith('0:"') || line.startsWith("0:'")) {
-            // Extract text delta: 0:"hello " → hello 
             try {
-              const jsonStr = line.slice(2); // remove "0:"
+              const jsonStr = line.slice(2);
               const token   = JSON.parse(jsonStr) as string;
               accumulated  += token;
               setMessages(prev =>
@@ -139,7 +138,6 @@ export default function AIAssistant() {
               );
             } catch { /* malformed line, skip */ }
           } else if (line.startsWith("0:")) {
-            // Some versions omit quotes: 0:hello
             const token = line.slice(2);
             if (token && !token.startsWith("{")) {
               accumulated += token;
@@ -153,7 +151,6 @@ export default function AIAssistant() {
         }
       }
 
-      /* If stream produced nothing, show a fallback */
       if (!accumulated) {
         setMessages(prev =>
           prev.map(m =>
@@ -168,7 +165,6 @@ export default function AIAssistant() {
       if ((err as Error).name === "AbortError") return;
       const msg = (err as Error).message ?? "Something went wrong.";
       setError(msg);
-      /* Remove the empty assistant bubble on error */
       setMessages(prev => prev.filter(m => m.id !== assistantId));
     } finally {
       setLoading(false);
@@ -222,14 +218,14 @@ export default function AIAssistant() {
                 </div>
               )}
 
-              {messages.map((msg) => (
+              {messages.map((m) => (
                 <div
-                  key={msg.id}
-                  className={`aia-bubble ${msg.role === "user" ? "aia-bubble--user" : "aia-bubble--assistant"}`}
+                  key={m.id}
+                  className={`aia-bubble aia-bubble--${m.role}`}
                 >
-                  {msg.content || (
-                    msg.role === "assistant" && loading ? (
-                      <span className="aia-typing">
+                  {m.content || (
+                    m.role === "assistant" && loading ? (
+                      <span className="aia-typing" aria-label="Thinking">
                         <span /><span /><span />
                       </span>
                     ) : null
@@ -302,89 +298,162 @@ export default function AIAssistant() {
       </motion.button>
 
       <style>{`
+        /* ── Launch button ── */
         .aia-launch {
-          position: fixed; bottom: 24px; right: 24px; z-index: 90;
-          width: 40px; height: 40px; border-radius: 50%;
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 90;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
           background-color: var(--color-bg-elevated, #0F0F0F);
           border: 1px solid var(--color-border-default, #2A2A2A);
           color: var(--color-text-secondary, #888888);
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; transition: border-color 150ms ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: border-color 150ms ease;
         }
         .aia-launch:hover { border-color: var(--color-border-strong, #333333); }
 
+        /* ── Panel — desktop default ── */
         .aia-panel {
-          position: fixed; bottom: 80px; right: 24px; z-index: 89;
-          width: 340px; height: 480px;
+          position: fixed;
+          bottom: 80px;
+          right: 24px;
+          z-index: 89;
+          width: 340px;
+          height: 480px;
           background-color: var(--color-bg-elevated, #0F0F0F);
           border: 1px solid var(--color-border-default, #2A2A2A);
           border-radius: 10px;
           box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-          display: flex; flex-direction: column; overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        /* ── Mobile: panel goes full width minus 32px margin ── */
+        @media (max-width: 767px) {
+          .aia-panel {
+            /* Anchor to bottom-right, stretch left to 16px from edge */
+            bottom: 0;
+            right: 0;
+            left: 0;
+            width: auto;
+            /* Height: almost full screen, leaving room for launch btn */
+            height: calc(100dvh - 72px);
+            /* Remove rounded bottom corners — flush with screen edge */
+            border-radius: 12px 12px 0 0;
+            border-bottom: none;
+          }
+          .aia-launch {
+            bottom: 16px;
+            right: 16px;
+          }
         }
 
         .aia-header {
-          display: flex; align-items: center; justify-content: space-between;
-          height: 48px; padding: 0 16px; flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 48px;
+          padding: 0 16px;
+          flex-shrink: 0;
           border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
         }
         .aia-header-left { display: flex; align-items: center; gap: 8px; }
         .aia-dot {
-          width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          flex-shrink: 0;
           background-color: var(--color-accent, #4AFF91);
         }
         .aia-title {
           font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 13px; font-weight: 500;
+          font-size: 13px;
+          font-weight: 500;
           color: var(--color-text-primary, #F0F0F0);
         }
         .aia-close {
-          display: flex; align-items: center; justify-content: center;
-          width: 28px; height: 28px; background: transparent; border: none;
-          color: var(--color-text-muted, #444444); cursor: pointer;
-          border-radius: 4px; transition: color 150ms ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          /* 44×44 touch target */
+          width: 44px;
+          height: 44px;
+          background: transparent;
+          border: none;
+          color: var(--color-text-muted, #444444);
+          cursor: pointer;
+          border-radius: 4px;
+          transition: color 150ms ease;
         }
         .aia-close:hover { color: var(--color-text-primary, #F0F0F0); }
 
         .aia-messages {
-          flex: 1; overflow-y: auto; padding: 16px;
-          display: flex; flex-direction: column;
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
           scrollbar-width: thin;
           scrollbar-color: var(--color-border-default, #2A2A2A) transparent;
         }
         .aia-greeting {
-          flex: 1; display: flex; align-items: center; justify-content: center;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         .aia-greeting-text {
           font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 13px; color: var(--color-text-muted, #444444);
-          line-height: 1.6; max-width: 220px; text-align: center; margin: 0;
+          font-size: 13px;
+          color: var(--color-text-muted, #444444);
+          line-height: 1.6;
+          max-width: 220px;
+          text-align: center;
+          margin: 0;
         }
 
         .aia-bubble {
           font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 13px; line-height: 1.6;
-          padding: 10px 12px; border-radius: 6px;
-          margin-bottom: 8px; max-width: 90%; word-break: break-word;
+          font-size: 13px;
+          line-height: 1.6;
+          padding: 10px 12px;
+          border-radius: 6px;
+          margin-bottom: 8px;
+          max-width: 90%;
+          word-break: break-word;
         }
         .aia-bubble--assistant {
           background-color: var(--color-bg-overlay, #141414);
-          color: var(--color-text-secondary, #888888); align-self: flex-start;
+          color: var(--color-text-secondary, #888888);
+          align-self: flex-start;
         }
         .aia-bubble--user {
           background-color: var(--color-bg-inset, #1A1A1A);
           border: 1px solid var(--color-border-subtle, #1F1F1F);
           color: var(--color-text-primary, #F0F0F0);
-          align-self: flex-end; margin-left: auto;
+          align-self: flex-end;
+          margin-left: auto;
         }
         .aia-error { color: #FF6B6B; font-size: 12px; }
 
         /* Typing dots */
         .aia-typing {
-          display: inline-flex; align-items: center; gap: 4px; padding: 2px 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 2px 0;
         }
         .aia-typing span {
-          width: 4px; height: 4px; border-radius: 50%;
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
           background: var(--color-text-muted, #444444);
           display: inline-block;
           animation: aiaDot 1.2s ease-in-out infinite;
@@ -397,16 +466,24 @@ export default function AIAssistant() {
         }
 
         .aia-quick {
-          display: flex; flex-wrap: wrap; gap: 6px;
-          padding: 0 16px 12px; flex-shrink: 0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 0 16px 12px;
+          flex-shrink: 0;
         }
         .aia-quick-pill {
           font-family: var(--font-geist-mono, "Geist Mono", monospace);
-          font-size: 11px; color: var(--color-text-secondary, #888888);
+          font-size: 11px;
+          color: var(--color-text-secondary, #888888);
           background: transparent;
           border: 1px solid var(--color-border-subtle, #1F1F1F);
-          border-radius: 4px; padding: 4px 8px; cursor: pointer;
-          text-align: left; line-height: 1.4; transition: color 150ms ease, border-color 150ms ease;
+          border-radius: 4px;
+          padding: 4px 8px;
+          cursor: pointer;
+          text-align: left;
+          line-height: 1.4;
+          transition: color 150ms ease, border-color 150ms ease;
         }
         .aia-quick-pill:hover:not(:disabled) {
           color: var(--color-text-primary, #F0F0F0);
@@ -415,32 +492,46 @@ export default function AIAssistant() {
         .aia-quick-pill:disabled { opacity: 0.4; cursor: default; }
 
         .aia-input-row {
-          display: flex; align-items: center; gap: 8px;
-          height: 48px; padding: 0 12px; flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          height: 48px;
+          padding: 0 12px;
+          flex-shrink: 0;
           border-top: 1px solid var(--color-border-subtle, #1F1F1F);
         }
         .aia-input {
-          flex: 1; font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 13px; color: var(--color-text-primary, #F0F0F0);
-          background: transparent; border: none; outline: none;
-          caret-color: var(--color-accent, #4AFF91); min-width: 0;
+          flex: 1;
+          font-family: var(--font-geist, "Geist", sans-serif);
+          font-size: 13px;
+          color: var(--color-text-primary, #F0F0F0);
+          background: transparent;
+          border: none;
+          outline: none;
+          caret-color: var(--color-accent, #4AFF91);
+          min-width: 0;
         }
         .aia-input::placeholder { color: var(--color-text-muted, #444444); }
         .aia-input:disabled { opacity: 0.5; }
 
         .aia-send {
-          display: flex; align-items: center; justify-content: center;
-          width: 28px; height: 28px; background: transparent; border: none;
-          color: var(--color-text-muted, #444444); cursor: pointer;
-          border-radius: 4px; flex-shrink: 0; transition: color 150ms ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          /* 44×44 touch target */
+          width: 44px;
+          height: 44px;
+          background: transparent;
+          border: none;
+          color: var(--color-text-muted, #444444);
+          cursor: pointer;
+          border-radius: 4px;
+          flex-shrink: 0;
+          transition: color 150ms ease;
         }
         .aia-send:hover:not(:disabled) { color: var(--color-text-primary, #F0F0F0); }
         .aia-send:disabled { opacity: 0.3; cursor: default; }
 
-        @media (max-width: 400px) {
-          .aia-panel { right: 12px; left: 12px; width: auto; bottom: 72px; }
-          .aia-launch { right: 12px; bottom: 12px; }
-        }
         @media (prefers-reduced-motion: reduce) {
           .aia-launch, .aia-close, .aia-quick-pill, .aia-send { transition: none; }
           .aia-typing span { animation: none; opacity: 0.5; }
@@ -449,3 +540,4 @@ export default function AIAssistant() {
     </>
   );
 }
+
