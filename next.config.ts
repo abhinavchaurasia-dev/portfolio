@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: "/((?!resume\\.pdf$).*)",
         headers: [
           /* Prevent MIME sniffing */
           { key: "X-Content-Type-Options",    value: "nosniff"          },
@@ -75,7 +75,7 @@ const nextConfig: NextConfig = {
               "media-src 'self'",
               "connect-src 'self' https://api.openai.com https://openrouter.ai https://*.upstash.io wss://*.upstash.io",
               "frame-ancestors 'none'",
-              "object-src 'none'",
+              "object-src 'self'",
               "base-uri 'self'",
             ].join("; "),
           },
@@ -98,6 +98,15 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options",       value: "SAMEORIGIN"                    },
           { key: "Content-Type",          value: "application/pdf"               },
           { key: "Content-Disposition",   value: "inline; filename=\"resume.pdf\"" },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "frame-ancestors 'self'",
+              "object-src 'self'",
+              "base-uri 'self'",
+            ].join("; "),
+          },
         ],
       },
       /* Long-term cache for static assets */
