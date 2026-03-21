@@ -19,7 +19,7 @@
   /* --- Text --- */
   --color-text-primary:   #F0F0F0;
   --color-text-secondary: #888888;
-  --color-text-muted:     #6B6B6B;
+  --color-text-muted:     #7A7A7A;
   --color-text-mono:      #888888;
 
   /* --- Accent (max 4x per page) --- */
@@ -342,14 +342,14 @@ img, svg {
 }
 
 .prose li::marker {
-  color: var(--color-text-muted, #444444);
+  color: var(--color-text-muted, #7A7A7A);
 }
 
 .prose blockquote {
   border-left: 2px solid var(--color-border-default, #2A2A2A);
   padding-left: 1em;
   margin: 1.5em 0;
-  color: var(--color-text-mono, #666666);
+  color: var(--color-text-mono, #888888);
   font-style: italic;
 }
 
@@ -461,7 +461,7 @@ img, svg {
 
 .adr-block-label {
   font-size: 11px;
-  color: var(--color-text-muted, #444444);
+  color: var(--color-text-muted, #7A7A7A);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 12px;
@@ -475,7 +475,7 @@ img, svg {
 
 .adr-block-context {
   font-size: 13px;
-  color: var(--color-text-mono, #666666);
+  color: var(--color-text-mono, #888888);
   line-height: 1.6;
 }
 
@@ -490,7 +490,7 @@ img, svg {
   padding: 4px 8px;
   font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px;
-  color: var(--color-text-muted, #444444);
+  color: var(--color-text-muted, #7A7A7A);
   background-color: var(--color-bg-inset, #1A1A1A);
   border: 1px solid var(--color-border-subtle, #1F1F1F);
   border-radius: 4px;
@@ -508,7 +508,7 @@ img, svg {
   gap: 6px;
   font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px;
-  color: var(--color-text-muted, #444444);
+  color: var(--color-text-muted, #7A7A7A);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
