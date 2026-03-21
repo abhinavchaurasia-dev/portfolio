@@ -4,6 +4,7 @@ import Nav from "@/components/layout/Nav";
 import Footer from "@/components/layout/Footer";
 import CommandPalette from "@/components/shared/CommandPalette";
 import AIAssistant from "@/components/shared/AIAssistant";
+import ScrollFade from "@/components/shared/ScrollFade";
 import "./globals.css";
 
 /* ============================================================
@@ -175,6 +176,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="AbhinavChaurasia" />
+        <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body>
         <Nav />
@@ -182,7 +189,9 @@ export default function RootLayout({
         <Footer />
         <CommandPalette />
         <AIAssistant />
+        <ScrollFade />
       </body>
     </html>
   );
 }
+
