@@ -104,6 +104,9 @@ export default function ExperienceAccordion() {
                   style={{ overflow: "hidden" }}
                 >
                   <div className="ea-body-inner">
+                    {/* Date — shown here on mobile since header hides it */}
+                    <time className="ea-body-date">{entry.date}</time>
+
                     {/* Bullet points */}
                     <ul className="ea-bullets" role="list">
                       {entry.bullets.map((b, i) => (
@@ -135,18 +138,17 @@ export default function ExperienceAccordion() {
           background-color: var(--color-border-subtle, #1F1F1F);
         }
 
-        .ea-item {
-          /* border-bottom set on header and body separately */
-        }
-
         /* ── Header ── */
         .ea-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           width: 100%;
-          height: 56px;
-          padding: 0 4px;
+          /* 44px minimum tap target height */
+          min-height: 44px;
+          /* Allow header to grow taller on mobile when content wraps */
+          height: auto;
+          padding: 10px 4px;
           background: transparent;
           border: none;
           border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
@@ -167,6 +169,7 @@ export default function ExperienceAccordion() {
           align-items: center;
           gap: 16px;
           min-width: 0;
+          flex: 1;
         }
 
         .ea-logo {
@@ -196,18 +199,19 @@ export default function ExperienceAccordion() {
           font-size: 14px;
           font-weight: 500;
           color: var(--color-text-primary, #F0F0F0);
-          white-space: nowrap;
+          /* Allow wrapping on narrow viewports instead of truncating */
           overflow: hidden;
           text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .ea-company {
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 13px;
           color: var(--color-text-secondary, #888888);
-          white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         /* Right block */
@@ -228,8 +232,30 @@ export default function ExperienceAccordion() {
         .ea-icon {
           display: flex;
           align-items: center;
+          /* 44×44 touch target for the icon */
+          min-width: 44px;
+          min-height: 44px;
+          justify-content: center;
           color: var(--color-text-muted, #444444);
           flex-shrink: 0;
+        }
+
+        /* Mobile: hide the date text (too long for 375px), keep icon */
+        @media (max-width: 480px) {
+          .ea-date {
+            display: none;
+          }
+          /* Show date inside body instead */
+          .ea-body-date {
+            display: block;
+          }
+          /* Compact company label so role doesn't get truncated too aggressively */
+          .ea-role {
+            font-size: 13px;
+          }
+          .ea-company {
+            font-size: 12px;
+          }
         }
 
         /* ── Expanded body ── */
@@ -237,6 +263,25 @@ export default function ExperienceAccordion() {
           padding: 16px 4px 20px 52px;
           /* 52px left = 32px logo + 16px gap + 4px header padding */
           border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
+        }
+
+        /* Date shown inside body on mobile */
+        .ea-body-date {
+          display: none;
+          font-family: var(--font-geist-mono, "Geist Mono", monospace);
+          font-size: 11px;
+          color: var(--color-text-muted, #444444);
+          margin-bottom: 12px;
+        }
+
+        @media (max-width: 480px) {
+          .ea-body-inner {
+            /* Reduce left indent on 375px to avoid squishing content */
+            padding-left: 16px;
+          }
+          .ea-body-date {
+            display: block;
+          }
         }
 
         /* Bullets */
@@ -300,3 +345,4 @@ export default function ExperienceAccordion() {
     </div>
   );
 }
+

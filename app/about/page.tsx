@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import PageWrapper from "@/components/layout/PageWrapper";
 import SectionReveal from "@/components/shared/AnimatedReveal";
 import ExperienceAccordion from "@/components/about/ExperienceAccordion";
@@ -28,6 +29,20 @@ export default function AboutPage() {
         {/* ── Page header ── */}
         <SectionReveal>
           <h1 className="ab-heading">About</h1>
+        </SectionReveal>
+
+        {/* ── Photo ── */}
+        <SectionReveal delay={0.02}>
+          <div className="ab-photo-wrap" aria-hidden="true">
+            <Image
+              src="/abhinav.jpg"
+              alt="Abhinav Chaurasia"
+              width={72}
+              height={72}
+              className="ab-photo"
+              priority
+            />
+          </div>
         </SectionReveal>
 
         {/* ── Bio block ── */}
@@ -108,6 +123,28 @@ export default function AboutPage() {
           line-height: 1.2;
         }
 
+        /* Photo */
+        .ab-photo-wrap {
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          border: 2px solid var(--color-border-subtle, #1F1F1F);
+          overflow: hidden;
+          margin-bottom: 24px;
+          flex-shrink: 0;
+        }
+
+        .ab-photo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          /* center top = anchor to top of image, crop from bottom.
+             Keeps the face/head in frame regardless of photo aspect ratio. */
+          object-position: center top;
+          display: block;
+          border-radius: 50%;
+        }
+
         /* Bio */
         .ab-bio {
           max-width: 600px;
@@ -131,7 +168,7 @@ export default function AboutPage() {
           margin-top: 40px;
         }
 
-        .ab-section--stack  { margin-top: 40px; }
+        .ab-section--stack    { margin-top: 40px; }
         .ab-section--timeline { margin-top: 40px; }
 
         /* Section label — consistent with whole site */
@@ -145,7 +182,14 @@ export default function AboutPage() {
           margin-bottom: 16px;
           user-select: none;
         }
+
+        /* Mobile */
+        @media (max-width: 767px) {
+          .ab { padding-top: 48px; }
+          .ab-heading { font-size: 24px; margin-bottom: 24px; }
+        }
       `}</style>
     </PageWrapper>
   );
 }
+
