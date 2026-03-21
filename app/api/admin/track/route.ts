@@ -103,3 +103,4 @@ export async function GET(req: NextRequest) {
     return Response.json({ live: null, last: null });
   }
 }
+

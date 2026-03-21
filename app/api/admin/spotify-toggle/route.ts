@@ -62,3 +62,4 @@ export async function POST(req: NextRequest) {
   await redis.set(TOGGLE_KEY, body.isLive ? "1" : "0");
   return Response.json({ ok: true, isLive: body.isLive });
 }
+
