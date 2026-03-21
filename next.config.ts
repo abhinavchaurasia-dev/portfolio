@@ -76,6 +76,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      /* Allow PDF to be embedded via <object> on the same origin */
+      {
+        source: "/resume.pdf",
+        headers: [
+          { key: "X-Frame-Options",       value: "SAMEORIGIN"                    },
+          { key: "Content-Type",          value: "application/pdf"               },
+          { key: "Content-Disposition",   value: "inline; filename=\"resume.pdf\"" },
+        ],
+      },
       /* Long-term cache for static assets */
       {
         source: "/_next/static/(.*)",
@@ -101,31 +110,17 @@ const nextConfig: NextConfig = {
 
   /* ── Redirects ── */
   async redirects() {
-    return [
-      // Redirect old /resume path if you've shared that link anywhere
-      {
-        source:      "/resume",
-        destination: "/Abhinav_Chaurasia_Resume.pdf",
-        permanent:   false,
-      },
-    ];
+    return [];
   },
 
-  /* ── Bundle analyser ── */
-  ...(process.env.ANALYZE === "true"
-    ? {
-        // Run: ANALYZE=true npm run build
-        // Requires: npm install -D @next/bundle-analyzer
-        webpack(config: import("webpack").Configuration) {
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          const { BundleAnalyzerPlugin } = require("@next/bundle-analyzer")({
-            enabled: true,
-          });
-          config.plugins = [...(config.plugins ?? []), new BundleAnalyzerPlugin()];
-          return config;
-        },
-      }
-    : {}),
 };
 
-export default nextConfig;
+/* ── Bundle analyser ── */
+// Run: ANALYZE=true npm run build
+// Requires: npm install -D @next/bundle-analyzer
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
+export default withBundleAnalyzer(nextConfig);
