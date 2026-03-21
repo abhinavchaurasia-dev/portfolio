@@ -98,16 +98,9 @@ function getCurrentTheme(): "dark" | "light" {
 export default function CommandPalette() {
   const router                    = useRouter();
   const [open, setOpen]           = useState(false);
-  const [theme, setTheme]         = useState<"dark" | "light">("dark");
-  const [mounted, setMounted]     = useState(false);
+  const [theme, setTheme]         = useState<"dark" | "light">(getCurrentTheme);
   const containerRef              = useRef<HTMLDivElement>(null);
   const triggerRef                = useRef<HTMLElement | null>(null);
-
-  /* Sync theme label after mount */
-  useEffect(() => {
-    setMounted(true);
-    setTheme(getCurrentTheme());
-  }, []);
 
   /* ── Open helpers ── */
   const openPalette = useCallback(() => {
@@ -324,8 +317,8 @@ export default function CommandPalette() {
       items: [
         {
           id: "toggle-theme",
-          label: mounted && theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
-          icon: mounted && theme === "dark"
+          label: theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
+          icon: theme === "dark"
             ? <Sun  size={16} strokeWidth={1.5} />
             : <Moon size={16} strokeWidth={1.5} />,
           action: toggleTheme,

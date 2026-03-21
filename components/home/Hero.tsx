@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowRight, Github, Linkedin,
   Mail, Volume2, MapPin, Copy, Check, Clock,
@@ -97,7 +97,6 @@ interface SocialLink {
 
 export default function Hero() {
   const reduceMotion = useReducedMotion();
-  const [copied, setCopied] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
   const [roleIndex, setRoleIndex] = useState(0);
   const [roleVisible, setRoleVisible] = useState(true);
@@ -302,7 +301,7 @@ export default function Hero() {
           <Clock size={13} strokeWidth={1.5} className="hero-info-icon" aria-hidden="true" />
           <span className="hero-info-value hero-info-tz">
             {currentTime || "—"}
-            <span className="hero-tz-sep">//</span>
+            <span className="hero-tz-sep">{"//"}</span>
             <span className="hero-tz-offset">{TZ_LABEL}</span>
           </span>
           <AnimatePresence>

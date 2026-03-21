@@ -47,29 +47,23 @@ function getInitialTheme(): "dark" | "light" {
 
 export default function Nav() {
   const pathname                      = usePathname();
-  const [theme, setTheme]             = useState<"dark" | "light">("dark");
+  const [theme, setTheme]             = useState<"dark" | "light">(getInitialTheme);
   const [drawerOpen, setDrawerOpen]   = useState(false);
-  const [mounted, setMounted]         = useState(false);
   const drawerRef                     = useRef<HTMLDivElement>(null);
   const hamburgerRef                  = useRef<HTMLButtonElement>(null);
 
-  /* Hydration guard — read localStorage only on client */
-  useEffect(() => {
-    setTheme(getInitialTheme());
-    setMounted(true);
-  }, []);
-
   /* Apply theme to <html> data-theme attribute */
   useEffect(() => {
-    if (!mounted) return;
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme, mounted]);
+  }, [theme]);
 
   /* Close drawer on route change */
   useEffect(() => {
-    setDrawerOpen(false);
-  }, [pathname]);
+    if (!drawerOpen) return;
+    const id = requestAnimationFrame(() => setDrawerOpen(false));
+    return () => cancelAnimationFrame(id);
+  }, [pathname, drawerOpen]);
 
   /* Close drawer on outside click */
   useEffect(() => {
@@ -174,12 +168,8 @@ export default function Nav() {
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
-              {mounted ? (
-                theme === "dark" ? (
-                  <Sun  size={16} strokeWidth={1.5} aria-hidden="true" />
-                ) : (
-                  <Moon size={16} strokeWidth={1.5} aria-hidden="true" />
-                )
+              {theme === "dark" ? (
+                <Sun  size={16} strokeWidth={1.5} aria-hidden="true" />
               ) : (
                 <Moon size={16} strokeWidth={1.5} aria-hidden="true" />
               )}
@@ -191,7 +181,7 @@ export default function Nav() {
               className="nav-hamburger"
               onClick={() => setDrawerOpen((prev) => !prev)}
               aria-label={drawerOpen ? "Close menu" : "Open menu"}
-              aria-expanded={drawerOpen}
+              aria-expanded={drawerOpen ? "true" : "false"}
               aria-controls="mobile-drawer"
             >
               {drawerOpen ? (

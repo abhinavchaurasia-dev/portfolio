@@ -18,11 +18,9 @@ function isDark(): boolean {
 
 export default function ScrollFade() {
   const [opacity, setOpacity] = useState(1);
-  const [dark, setDark]       = useState(true);
+  const [dark, setDark]       = useState(() => isDark());
 
   useEffect(() => {
-    setDark(isDark());
-
     const observer = new MutationObserver(() => setDark(isDark()));
     observer.observe(document.documentElement, {
       attributes:      true,

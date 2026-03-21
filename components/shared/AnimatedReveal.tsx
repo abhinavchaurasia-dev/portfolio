@@ -21,17 +21,17 @@ export default function SectionReveal({
   className,
 }: SectionRevealProps) {
   const ref     = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
 
   useEffect(() => {
     /* Respect prefers-reduced-motion at the JS level too */
     const prefersReduced =
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (prefersReduced) {
-      setVisible(true);
-      return;
-    }
+    if (prefersReduced) return;
 
     const el = ref.current;
     if (!el) return;

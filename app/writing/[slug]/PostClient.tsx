@@ -57,10 +57,12 @@ function TableOfContents() {
     const prose = document.getElementById("post-prose");
     if (!prose) return;
     const headings = Array.from(prose.querySelectorAll("h2"));
-    setItems(headings.map((h, i) => {
+    const nextItems = headings.map((h, i) => {
       if (!h.id) h.id = `h2-${i}`;
       return { id: h.id, text: h.textContent ?? "" };
-    }));
+    });
+    const id = requestAnimationFrame(() => setItems(nextItems));
+    return () => cancelAnimationFrame(id);
   }, []);
 
   /* Track active section + reading progress */
@@ -288,7 +290,6 @@ function ShareModal({ title, slug, onClose }: { title: string; slug: string; onC
   }, [onClose]);
 
   const encodedUrl   = encodeURIComponent(url);
-  const mdxUrl       = url.replace("https://abhinavchaurasia.in/writing/", "https://abhinavchaurasia.in/writing/") + ".mdx";
   const tweetUrl     = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`"${title}"`)}&url=${encodedUrl}`;
   const linkedInUrl  = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
   const prompt       = encodeURIComponent(`Read ${url}, I want to ask questions about it.`);
@@ -305,7 +306,7 @@ function ShareModal({ title, slug, onClose }: { title: string; slug: string; onC
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </button>
         </div>
-        <p className="sm-sub">"{title}"</p>
+        <p className="sm-sub">&quot;{title}&quot;</p>
 
         {/* Copy link */}
         <p className="sm-label">Copy link</p>
@@ -379,11 +380,9 @@ function ShareModal({ title, slug, onClose }: { title: string; slug: string; onC
    ============================================================ */
 
 function SharePortal({ title, slug }: { title: string; slug: string }) {
-  const [mounted, setMounted]   = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return null;
+  if (typeof document === "undefined") return null;
 
   const anchor = document.getElementById("post-share-anchor");
   if (!anchor) return null;
@@ -404,8 +403,6 @@ function SharePortal({ title, slug }: { title: string; slug: string }) {
 export default function PostClient({
   title,
   slug,
-  postUrl,
-  content: _content,
 }: {
   title: string;
   slug: string;

@@ -1,5 +1,4 @@
 import { Redis } from "@upstash/redis";
-import { NextRequest } from "next/server";
 
 /* ============================================================
    VISITOR COUNTER API
@@ -22,7 +21,7 @@ function getRedis(): Redis | null {
 }
 
 /* ── POST — increment and return new total ── */
-export async function POST(_req: NextRequest) {
+export async function POST() {
   const redis = getRedis();
 
   if (!redis) {

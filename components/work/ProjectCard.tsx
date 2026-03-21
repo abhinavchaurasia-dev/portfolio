@@ -165,7 +165,7 @@ export default function ProjectCard({
           {iconsToShow.map((tag) => {
             const icon = ICON_MAP[tag.toLowerCase()];
             return icon ? (
-              <img
+              <Image
                 key={tag}
                 src={icon.src}
                 alt={icon.label}
@@ -173,6 +173,7 @@ export default function ProjectCard({
                 width={20}
                 height={20}
                 className="pc-tech-icon"
+                unoptimized
               />
             ) : (
               <span key={tag} className="pc-tech-pill">{tag}</span>
