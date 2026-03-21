@@ -13,6 +13,7 @@ import { Command } from "cmdk";
 import {
   Briefcase,
   Copy,
+  Cpu,
   Download,
   Folder,
   Github,
@@ -23,6 +24,7 @@ import {
   Search,
   Sun,
   User,
+  Wrench,
 } from "lucide-react";
 
 /* ============================================================
@@ -142,7 +144,6 @@ export default function CommandPalette() {
         router.push(item.href);
       } else if (item.action) {
         item.action();
-        /* Sync theme label after toggle */
         if (item.id === "toggle-theme") {
           setTheme(getCurrentTheme());
         }
@@ -156,19 +157,27 @@ export default function CommandPalette() {
     {
       heading: "Navigation",
       items: [
-        { id: "nav-home",    label: "Home",    icon: <Home      size={16} strokeWidth={1.5} />, shortcut: "H", href: "/"        },
-        { id: "nav-work",    label: "Work",    icon: <Briefcase size={16} strokeWidth={1.5} />, shortcut: "W", href: "/work"    },
-        { id: "nav-writing", label: "Writing", icon: <PenLine   size={16} strokeWidth={1.5} />, shortcut: "B", href: "/writing" },
-        { id: "nav-about",   label: "About",   icon: <User      size={16} strokeWidth={1.5} />, shortcut: "A", href: "/about"   },
+        { id: "nav-home",    label: "Home",    icon: <Home      size={16} strokeWidth={1.5} />, shortcut: "H", href: "/"       },
+        { id: "nav-work",    label: "Work",    icon: <Briefcase size={16} strokeWidth={1.5} />, shortcut: "W", href: "/work"   },
+        { id: "nav-projects",label: "Projects",icon: <Folder    size={16} strokeWidth={1.5} />, shortcut: "P", href: "/projects"},
+        { id: "nav-writing", label: "Blogs",   icon: <PenLine   size={16} strokeWidth={1.5} />, shortcut: "B", href: "/writing"},
+        { id: "nav-setup",   label: "Setup",   icon: <Wrench    size={16} strokeWidth={1.5} />, shortcut: "S", href: "/uses"   },
+        { id: "nav-gears",   label: "Gears",   icon: <Cpu       size={16} strokeWidth={1.5} />, shortcut: "G", href: "/gears"  },
+        { id: "nav-about",   label: "About",   icon: <User      size={16} strokeWidth={1.5} />, shortcut: "A", href: "/about"  },
       ],
     },
     {
       heading: "Projects",
       items: [
-        { id: "proj-railway",    label: "Railway Portal", icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/railway"    },
-        { id: "proj-peercampus", label: "PeerCampus",     icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/peercampus" },
-        { id: "proj-civic",      label: "CivicBridge",    icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/civicbridge" },
-        { id: "proj-senti",      label: "SentiGenix",     icon: <Folder size={16} strokeWidth={1.5} />, href: "/work/sentigenix" },
+        { id: "proj-peercampus", label: "PeerCampus",  icon: <Folder size={16} strokeWidth={1.5} />, href: "/projects/peercampus" },
+        { id: "proj-civic",      label: "CivicBridge", icon: <Folder size={16} strokeWidth={1.5} />, href: "/projects/civicbridge" },
+        { id: "proj-senti",      label: "SentiGenix",  icon: <Folder size={16} strokeWidth={1.5} />, href: "/projects/sentigenix" },
+      ],
+    },
+    {
+      heading: "Work",
+      items: [
+        { id: "work-railway", label: "Northern Railway", icon: <Briefcase size={16} strokeWidth={1.5} />, href: "/work/railway" },
       ],
     },
     {
@@ -198,7 +207,7 @@ export default function CommandPalette() {
           label: "Download CV",
           icon: <Download size={16} strokeWidth={1.5} />,
           shortcut: "R",
-          action: () => window.open("/Abhinav_Chaurasia_Resume.pdf"),
+          action: () => window.open("/resume"),
         },
         {
           id: "action-github",
@@ -245,29 +254,20 @@ export default function CommandPalette() {
           {/* ── Panel ── */}
           <div className="cp-container" ref={containerRef}>
             <Command
-              label="Command palette"
               className="cp-root"
+              label="Command palette"
               loop
-              onKeyDown={(e) => {
-                if (e.key === "Escape") closePalette();
-              }}
             >
-              {/* Search input */}
+              {/* Input */}
               <div className="cp-input-row">
-                <Search
-                  size={16}
-                  strokeWidth={1.5}
-                  className="cp-search-icon"
-                  aria-hidden="true"
-                />
+                <Search size={16} strokeWidth={1.5} className="cp-search-icon" aria-hidden="true" />
                 <Command.Input
                   className="cp-input"
-                  placeholder="Type a command or search..."
+                  placeholder="Search pages, projects, actions…"
                   autoFocus
                 />
               </div>
 
-              {/* Results */}
               <Command.List className="cp-list">
                 <Command.Empty className="cp-empty">
                   No results found.
@@ -337,13 +337,14 @@ export default function CommandPalette() {
           to   { opacity: 1; }
         }
 
-        /* ── Container ── */
+        /* ── Container — desktop ── */
         .cp-container {
           position: fixed;
           top: 20%;
           left: 50%;
           z-index: 90;
-          width: min(560px, calc(100vw - 48px));
+          /* Desktop: up to 560px wide; Mobile: 92vw spec */
+          width: min(560px, 92vw);
           transform: translateX(-50%);
           background-color: var(--color-bg-elevated, #0F0F0F);
           border: 1px solid var(--color-border-default, #2A2A2A);
@@ -351,6 +352,13 @@ export default function CommandPalette() {
           box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
           overflow: hidden;
           animation: cpPanelIn 250ms cubic-bezier(0, 0, 0.2, 1) forwards;
+        }
+
+        /* On very small viewports, push down a bit from top */
+        @media (max-width: 480px) {
+          .cp-container {
+            top: 12%;
+          }
         }
 
         @keyframes cpPanelIn {
@@ -405,6 +413,13 @@ export default function CommandPalette() {
           scrollbar-color: var(--color-border-default, #2A2A2A) transparent;
         }
 
+        /* Tighten max-height on small screens so footer stays visible */
+        @media (max-width: 480px) {
+          .cp-list {
+            max-height: 52vh;
+          }
+        }
+
         /* ── Group ── */
         .cp-group [cmdk-group-heading] {
           padding: 8px 8px 4px;
@@ -417,7 +432,7 @@ export default function CommandPalette() {
           user-select: none;
         }
 
-        /* ── Item ── */
+        /* ── Item — 44px touch target on mobile ── */
         .cp-item {
           display: flex;
           align-items: center;
@@ -430,6 +445,12 @@ export default function CommandPalette() {
           outline: none;
           user-select: none;
           transition: background-color 80ms ease;
+        }
+
+        @media (max-width: 767px) {
+          .cp-item {
+            height: 44px;
+          }
         }
 
         .cp-item[aria-selected="true"],
@@ -470,6 +491,11 @@ export default function CommandPalette() {
           padding: 2px 6px;
           flex-shrink: 0;
           line-height: 1;
+          /* Hide keyboard shortcuts on mobile — not relevant for touch */
+        }
+
+        @media (max-width: 480px) {
+          .cp-item-shortcut { display: none; }
         }
 
         /* ── Empty state ── */
@@ -490,6 +516,11 @@ export default function CommandPalette() {
           padding: 0 16px;
           border-top: 1px solid var(--color-border-subtle, #1F1F1F);
           flex-shrink: 0;
+        }
+
+        /* Hide footer hints on very small screens to save vertical space */
+        @media (max-width: 380px) {
+          .cp-footer { display: none; }
         }
 
         .cp-footer-hint {
@@ -523,3 +554,4 @@ export default function CommandPalette() {
     </CommandPaletteContext.Provider>
   );
 }
+

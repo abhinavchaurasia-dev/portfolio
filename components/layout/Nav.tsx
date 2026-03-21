@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Menu, X, Sun, Moon, Search } from "lucide-react";
@@ -19,9 +20,12 @@ interface NavLink {
    ============================================================ */
 
 const NAV_LINKS: NavLink[] = [
+  { label: "Home",    href: "/"        },
   { label: "Work",    href: "/work"    },
-  { label: "Writing", href: "/writing" },
+  { label: "Projects",href: "/projects"},
+  { label: "Blogs",   href: "/writing" },
   { label: "About",   href: "/about"   },
+  { label: "Resume",  href: "/resume"  },
 ];
 
 const STORAGE_KEY = "theme-preference";
@@ -125,7 +129,14 @@ export default function Nav() {
 
           {/* ---------- LEFT: Logomark ---------- */}
           <Link href="/" className="nav-logo" aria-label="Abhinav Chaurasia — home">
-            AC
+            <Image
+              src="/logo.svg"
+              alt="Abhinav Chaurasia"
+              width={40}
+              height={40}
+              className="nav-logo-img"
+              priority
+            />
           </Link>
 
           {/* ---------- CENTER: Desktop links ---------- */}
@@ -162,7 +173,6 @@ export default function Nav() {
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
-              {/* Render placeholder on server to avoid hydration mismatch */}
               {mounted ? (
                 theme === "dark" ? (
                   <Sun  size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -236,24 +246,36 @@ export default function Nav() {
           SCOPED STYLES
           ==================================================== */}
       <style>{`
-        /* --- Nav bar shell --- */
+        /* --- Nav bar shell — glassmorphism --- */
         .nav-bar {
           position: sticky;
           top: 0;
           z-index: 50;
           height: 52px;
-          border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
-          background-color: color-mix(in srgb, var(--color-bg-elevated, #0F0F0F) 90%, transparent);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          /* Stronger glass: semi-transparent bg + blur + saturation */
+          background-color: color-mix(in srgb, var(--color-bg-base, #080808) 70%, transparent);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          /* Subtle bottom border that acts as the glass edge */
+          border-bottom: 1px solid color-mix(in srgb, var(--color-border-subtle, #1F1F1F) 60%, transparent);
         }
 
+        /* Light theme glass */
+        [data-theme="light"] .nav-bar {
+          background-color: color-mix(in srgb, #FAFAFA 70%, transparent);
+          border-bottom-color: color-mix(in srgb, #E0E0E0 60%, transparent);
+        }
+
+        /* --- Nav inner — 720px column, mirrors .page-wrapper --- */
         .nav-inner {
           height: 100%;
+          max-width: 720px;
+          width: 100%;
+          margin-inline: auto;
+          padding-inline: clamp(24px, 5vw, 80px);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-inline: clamp(24px, 5vw, 80px);
         }
 
         /* --- Logomark --- */
@@ -265,14 +287,26 @@ export default function Nav() {
           letter-spacing: -0.01em;
           flex-shrink: 0;
           transition: opacity 150ms ease;
+          /* 44px touch target height via line-height trick */
+          display: flex;
+          align-items: center;
+          min-height: 44px;
         }
         .nav-logo:hover { opacity: 0.7; }
+
+        /* Logo image sizing */
+        .nav-logo-img {
+          display: block;
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+        }
 
         /* --- Desktop nav links --- */
         .nav-links {
           display: none;
           align-items: center;
-          gap: 32px;
+          gap: 24px;
           list-style: none;
           margin: 0;
           padding: 0;
@@ -328,6 +362,7 @@ export default function Nav() {
           cursor: pointer;
           transition: border-color 150ms ease, color 150ms ease;
           white-space: nowrap;
+          height: 28px;
         }
         .nav-search-btn:hover {
           color: var(--color-text-secondary, #888888);
@@ -350,13 +385,13 @@ export default function Nav() {
           padding: 0;
         }
 
-        /* --- Icon buttons (theme toggle) --- */
+        /* --- Icon buttons (theme toggle) — 44×44 touch target --- */
         .nav-icon-btn {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
+          width: 44px;
+          height: 44px;
           color: var(--color-text-secondary, #888888);
           background: transparent;
           border: none;
@@ -367,13 +402,14 @@ export default function Nav() {
         }
         .nav-icon-btn:hover { color: var(--color-text-primary, #F0F0F0); }
 
-        /* --- Hamburger button — mobile only --- */
+        /* --- Hamburger button — mobile only, 44×44 touch target --- */
         .nav-hamburger {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
+          /* 44×44 minimum touch target per WCAG 2.5.5 */
+          width: 44px;
+          height: 44px;
           color: var(--color-text-secondary, #888888);
           background: transparent;
           border: none;
@@ -417,6 +453,8 @@ export default function Nav() {
           transform: translateX(100%);
           transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
           will-change: transform;
+          /* Prevent content overflow on 375px */
+          overflow-y: auto;
         }
 
         .mobile-drawer--open {
@@ -427,24 +465,27 @@ export default function Nav() {
           .mobile-drawer { display: none; }
         }
 
-        /* --- Drawer nav links --- */
+        /* --- Drawer nav links — 44px tap targets --- */
         .drawer-links {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 4px;
           list-style: none;
           margin: 0;
           padding: 0;
         }
 
         .drawer-link {
-          display: block;
+          display: flex;
+          align-items: center;
+          /* Enforces 44px minimum touch target height */
+          min-height: 44px;
           font-family: var(--font-geist, "Geist", sans-serif);
           font-size: 18px;
           font-weight: 500;
           color: var(--color-text-secondary, #888888);
           text-decoration: none;
-          padding: 10px 0;
+          padding: 0 4px;
           transition: color 150ms ease;
           border-bottom: 1px solid var(--color-border-subtle, #1F1F1F);
         }
@@ -456,14 +497,11 @@ export default function Nav() {
 
         /* --- Reduced motion --- */
         @media (prefers-reduced-motion: reduce) {
-          .mobile-drawer {
-            transition: none;
-          }
-          .drawer-overlay {
-            animation: none;
-          }
+          .mobile-drawer  { transition: none; }
+          .drawer-overlay { animation: none; }
         }
       `}</style>
     </>
   );
 }
+
