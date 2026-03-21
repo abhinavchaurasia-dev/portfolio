@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import FooterQuote from "@/components/shared/FooterQuote";
 
 /* ============================================================
    PageWrapper
@@ -17,6 +18,17 @@ export default function PageWrapper({ children, className }: PageWrapperProps) {
   return (
     <div className={["page-wrapper", className].filter(Boolean).join(" ")}>
       {children}
+      <div className="pw-quote-wrap">
+        <FooterQuote />
+      </div>
+
+      <style>{`
+        .pw-quote-wrap {
+          margin-top: 48px;
+          margin-bottom: 64px;
+        }
+      `}</style>
     </div>
   );
 }
+

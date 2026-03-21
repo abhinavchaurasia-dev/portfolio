@@ -111,6 +111,13 @@ html {
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   scroll-behavior: smooth;
+  /*
+   * FIX 1 — Prevent iOS Safari from auto-inflating text size
+   * when the device rotates or when the viewport is narrow.
+   * Without this, Safari scales up body text unpredictably on mobile.
+   */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -120,6 +127,13 @@ body {
   font-size: 15px;
   line-height: 1.75;
   min-height: 100dvh;
+  /*
+   * FIX 2 — Prevent any component overflow from creating
+   * a horizontal scrollbar / ghost scroll area at 375px.
+   * The drawer, command palette, and AI assistant panel all
+   * position: fixed, so they are unaffected by this clip.
+   */
+  overflow-x: hidden;
 }
 
 ul, ol {
@@ -403,6 +417,33 @@ img, svg {
 
 .prose tr:last-child td {
   border-bottom: none;
+}
+
+/*
+ * FIX 3 — Prose mobile scale
+ * At 375px, h1/h2 can feel oversized in a blog post column.
+ * Step heading sizes down one notch; body text stays at 15px
+ * (already comfortable at this width).
+ */
+@media (max-width: 480px) {
+  .prose h1 { font-size: 24px; }
+  .prose h2 { font-size: 20px; }
+  .prose h3 { font-size: 17px; }
+
+  /* Code blocks: allow horizontal scroll within the block,
+     not the whole page. Pre already has overflow-x: auto. */
+  .prose pre {
+    padding: 16px;
+    border-radius: 6px;
+  }
+
+  /* Tables: allow horizontal scroll within table container
+     instead of breaking page layout */
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* ============================================================
