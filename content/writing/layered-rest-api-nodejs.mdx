@@ -1,0 +1,129 @@
+---
+title: "Building a layered REST API with Node.js"
+date: "2025-12-01"
+category: "Backend"
+excerpt: "Routes, controllers, and services — why the separation matters and how I implemented it at Northern Railway."
+coverGradient: "linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #091820 100%)"
+---
+
+When I started the Northern Railway Portal, my first working version had everything in one file: route definitions, database queries, business logic, and PDF generation all tangled together in a single `index.js`. It worked. It was also completely unmaintainable after week two.
+
+The rewrite introduced a layered architecture — routes, controllers, and services as distinct concerns. This is a pattern I'd read about but never felt the weight of until I had to add a new feature to that original monolith and realised I couldn't confidently change anything without breaking something else.
+
+## What each layer is responsible for
+
+The architecture has three layers, each with a single job.
+
+**Routes** — declare the shape of the API. Which HTTP method, which path, which middleware runs first. Nothing else. A route file should be readable like a table of contents:
+
+```js
+// routes/certificates.js
+const router = express.Router();
+
+router.post("/",    authenticate, certificateController.create);
+router.get("/:id",  authenticate, certificateController.getById);
+router.patch("/:id/status", authenticate, authorize("admin"), certificateController.updateStatus);
+
+module.exports = router;
+```
+
+No logic here. If a route file has an `if` statement, something is wrong.
+
+**Controllers** — handle the HTTP contract. They receive `req` and `res`, validate the incoming shape, call the service, and return the response. They know about HTTP; they don't know about the database:
+
+```js
+// controllers/certificateController.js
+async function create(req, res) {
+  const { employeeId, type, issuedBy } = req.body;
+
+  if (!employeeId || !type) {
+    return res.status(400).json({ error: "employeeId and type are required" });
+  }
+
+  try {
+    const cert = await certificateService.create({ employeeId, type, issuedBy });
+    res.status(201).json(cert);
+  } catch (err) {
+    if (err.code === "EMPLOYEE_NOT_FOUND") {
+      return res.status(404).json({ error: err.message });
+    }
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+```
+
+The controller doesn't write SQL. It doesn't generate the PDF. It delegates.
+
+**Services** — contain the actual business logic. This is where the state machine lives, where the PDF gets generated, where the database queries run. Services are pure functions where possible — they receive plain data and return plain data:
+
+```js
+// services/certificateService.js
+async function create({ employeeId, type, issuedBy }) {
+  const employee = await db.query(
+    "SELECT * FROM employees WHERE id = $1",
+    [employeeId]
+  );
+
+  if (!employee.rows[0]) {
+    const err = new Error("Employee not found");
+    err.code = "EMPLOYEE_NOT_FOUND";
+    throw err;
+  }
+
+  const cert = await db.query(
+    `INSERT INTO certificates (employee_id, type, issued_by, status)
+     VALUES ($1, $2, $3, 'pending') RETURNING *`,
+    [employeeId, type, issuedBy]
+  );
+
+  await pdfService.queue(cert.rows[0].id);
+  return cert.rows[0];
+}
+```
+
+The service knows nothing about HTTP status codes. It throws domain errors with codes; the controller decides what those mean in HTTP terms.
+
+## Why the separation actually matters
+
+The benefit becomes concrete when requirements change — which they always do.
+
+Midway through the Railway Portal build, the certificate approval flow needed a new state: `"under_review"` between `"pending"` and `"approved"`. In the layered version, this change lived entirely in `certificateService.js` and the state machine module. The route and controller didn't change at all. I could test the state transition in isolation without spinning up an HTTP server.
+
+In the original monolith, that same change would have required tracing through interlocked logic across three different route handlers to make sure I wasn't missing a transition.
+
+## The state machine
+
+The approval flow has five states: `pending → under_review → approved → dispatched → delivered`, with a `rejected` terminal state reachable from `under_review` and `approved`. I encoded valid transitions as a map:
+
+```js
+const TRANSITIONS = {
+  pending:      ["under_review"],
+  under_review: ["approved", "rejected"],
+  approved:     ["dispatched", "rejected"],
+  dispatched:   ["delivered"],
+  delivered:    [],
+  rejected:     [],
+};
+
+function transition(current, next) {
+  if (!TRANSITIONS[current]?.includes(next)) {
+    const err = new Error(`Invalid transition: ${current} → ${next}`);
+    err.code = "INVALID_TRANSITION";
+    throw err;
+  }
+  return next;
+}
+```
+
+Any service that touches certificate status calls `transition()` first. Invalid state changes become impossible to accidentally introduce — they throw at the service layer before anything touches the database.
+
+## What I'd do differently
+
+I'd add a dedicated validation layer — either a schema library like Zod or hand-written validator functions — so the controller's input validation doesn't grow into its own business logic over time. Right now, `if (!employeeId || !type)` is fine. If that list grows to twelve fields with interdependencies, the controller becomes the place where complexity hides.
+
+The pattern holds: give each concern exactly one job, and keep those jobs from leaking across boundaries.
+
+## Links / Resources
+
+- [Express.js routing documentation](https://expressjs.com/en/guide/routing.html)
+- [Node.js best practices](https://github.com/goldbergyoni/nodebestpractices)

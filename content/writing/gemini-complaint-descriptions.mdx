@@ -1,0 +1,109 @@
+---
+title: "How Gemini AI generates civic complaint descriptions"
+date: "2026-01-10"
+category: "AI"
+excerpt: "Turning GPS coordinates and a photo into an actionable complaint report — the prompt engineering behind CivicBridge."
+coverGradient: "linear-gradient(135deg, #200a12 0%, #1a0d28 50%, #0a1020 100%)"
+---
+
+The core problem in CivicBridge was friction. A citizen spots a broken streetlight. To file a complaint, they need to describe it, locate it, categorise it, and phrase it in a way a municipality can act on. Most people abandon the form halfway through.
+
+The solution: take a photo, drop a pin, and let Gemini write the complaint.
+
+## What the feature actually does
+
+A citizen opens the app, taps "Report Issue," takes a photo of the problem, and confirms their GPS location. They hit submit. Gemini receives the image and coordinates, reverse-geocodes the location, classifies the issue type, and generates a formal complaint description ready to route to the relevant department.
+
+The output looks like this:
+
+> **Category:** Road Infrastructure  
+> **Location:** Near Sector 12 Market, Kanpur (26.4499° N, 80.3319° E)  
+> **Description:** A significant pothole approximately 30cm in diameter has formed at the intersection adjacent to the market entrance. The damage poses a risk to two-wheelers and pedestrians. Immediate patching is recommended before the onset of monsoon season.
+
+That's generated from a photo and a GPS pin. The citizen wrote nothing.
+
+## The prompt structure
+
+Getting Gemini to produce consistently actionable output required a few iterations. The naive prompt — "describe this civic issue" — produced text that was sometimes too casual, sometimes too vague, and often missing the location context entirely.
+
+The final system prompt has four explicit constraints:
+
+```
+You are a civic complaint assistant for Indian municipalities.
+Given an image of a civic infrastructure issue and GPS coordinates,
+generate a formal complaint report.
+
+Your output must:
+1. Identify the issue category from: [Road Infrastructure, Sanitation,
+   Street Lighting, Water Supply, Public Property, Other]
+2. Derive a human-readable location from the coordinates provided
+3. Describe the issue in 2–3 sentences using formal language suitable
+   for a municipal officer
+4. End with a recommended action
+
+Do not use casual language. Do not speculate beyond what is visible
+in the image. If the image is unclear, state that the issue requires
+on-site verification.
+
+Respond in JSON with keys: category, location, description, action.
+```
+
+The JSON output constraint was the most important addition. Free-form text responses were structurally inconsistent — sometimes a paragraph, sometimes a bulleted list, sometimes with a header. Enforcing JSON meant I could reliably parse and display each field, route by category, and store structured data rather than blobs.
+
+## Handling the coordinates
+
+Gemini doesn't reverse-geocode natively, so I pass the human-readable address alongside the coordinates. I call the Google Maps Geocoding API first, get a formatted address string, and inject it into the prompt:
+
+```js
+async function buildPrompt(coords, formattedAddress) {
+  return `
+Location: ${formattedAddress} (${coords.lat.toFixed(4)}° N, ${coords.lng.toFixed(4)}° E)
+
+Analyse the attached image and generate a civic complaint report
+following the format described in your instructions.
+  `.trim();
+}
+```
+
+This matters because Gemini's training data for Indian street-level geography is uneven. Giving it "Near Sector 12 Market, Kanpur" produces better location descriptions than asking it to derive context purely from coordinates.
+
+## The category routing
+
+Once Gemini returns a category, the complaint routes automatically to the relevant department queue. This is where the structured output pays off:
+
+```js
+const DEPARTMENT_MAP = {
+  "Road Infrastructure": "public_works",
+  "Sanitation":          "municipal_health",
+  "Street Lighting":     "electricity_dept",
+  "Water Supply":        "water_authority",
+  "Public Property":     "parks_and_estates",
+  "Other":               "general_complaints",
+};
+
+function routeComplaint(complaint) {
+  const dept = DEPARTMENT_MAP[complaint.category] ?? "general_complaints";
+  return assignToQueue(dept, complaint);
+}
+```
+
+If the category were free text, this map would be unreliable — Gemini might say "Roads" one time and "Road Damage" another. Constraining the output to a fixed enum in the system prompt eliminates that variability.
+
+## What the leaderboard uses
+
+One of CivicBridge's features is a municipality resolution leaderboard — which departments are closing complaints fastest. This only works because every complaint has a structured category and a status. Gemini's consistent categorisation is what makes the leaderboard data meaningful rather than noise.
+
+A complaint filed as "Other" because the image was ambiguous still enters the system. A human reviewer can reclassify it before routing. The AI handles the 90% case; the system degrades gracefully for the rest.
+
+## What I'd improve
+
+The current prompt asks Gemini to do two things at once: classify and describe. Splitting these into sequential calls — classify first, then describe with the category already confirmed — would likely improve accuracy on ambiguous images. The first call is cheap (short output); the second call benefits from the narrowed context.
+
+I'd also add confidence signalling. Right now, a blurry photo and a sharp photo get the same treatment. Gemini's API supports asking for uncertainty in the response, and surfacing "Low confidence — please verify on site" to the citizen reduces trust erosion when the description misses.
+
+The core insight remains: the less you ask a citizen to type, the more complaints actually get filed. Gemini doesn't replace civic engagement — it removes the activation energy barrier.
+
+## Links / Resources
+
+- [Google Gemini API documentation](https://ai.google.dev/docs)
+- [Google Maps Geocoding API](https://developers.google.com/maps/documentation/geocoding)
