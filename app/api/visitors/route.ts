@@ -33,9 +33,12 @@ export async function POST(_req: NextRequest) {
   try {
     const count = await redis.incr(REDIS_KEY);
     return Response.json({ count });
-  } catch (err) {
-    console.error("[visitors] POST error:", err);
-    return Response.json({ count: 0 }, { status: 500 });
+  } catch (error) {
+    console.error("Redis write failed:", error);
+    return Response.json(
+      { error: "Failed to update data" },
+      { status: 500 }
+    );
   }
 }
 
