@@ -91,7 +91,7 @@ export default function Footer() {
         .ft {
           border-top: 1px solid var(--color-border-subtle, #1F1F1F);
           padding-top: 48px;
-          padding-bottom: 32px;
+          padding-bottom: 40px;
           margin-top: 80px;
         }
 
@@ -192,9 +192,59 @@ export default function Footer() {
         }
 
         @media (max-width: 560px) {
-          .ft-top { flex-direction: column; gap: 32px; }
-          .ft-connect-grid { grid-template-columns: repeat(4, 36px); }
-          .ft-bottom { flex-direction: column; align-items: flex-start; }
+          .ft {
+            padding-bottom: 96px;
+          }
+
+          .ft-inner {
+            padding-inline: 20px;
+          }
+
+          .ft-top {
+            flex-direction: column;
+            gap: 28px;
+            margin-bottom: 36px;
+          }
+
+          .ft-col {
+            width: 100%;
+            min-width: 0;
+          }
+
+          .ft-nav-list {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, max-content));
+            gap: 8px 18px;
+            max-width: none;
+          }
+
+          .ft-connect-grid {
+            grid-template-columns: repeat(4, 36px);
+            gap: 10px;
+          }
+
+          .ft-bottom {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+            padding-top: 18px;
+          }
+
+          .ft-copy {
+            line-height: 1.45;
+          }
+
+          .ft-bottom .vc {
+            width: 100%;
+            text-align: center;
+          }
+        }
+
+        @media (min-width: 420px) and (max-width: 560px) {
+          .ft-connect-grid {
+            grid-template-columns: repeat(8, 36px);
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {

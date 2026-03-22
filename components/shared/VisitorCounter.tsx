@@ -63,6 +63,7 @@ export default function VisitorCounter() {
           color: var(--color-text-muted, #444444);
           display: block;
           text-align: right;
+          white-space: nowrap;
         }
 
         /* Highlighted count number */
@@ -79,6 +80,12 @@ export default function VisitorCounter() {
           font-weight: 500;
           vertical-align: super;
           color: var(--color-text-secondary, #888888);
+        }
+
+        @media (max-width: 560px) {
+          .vc {
+            text-align: center;
+          }
         }
       `}</style>
     </span>
