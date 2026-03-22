@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "View and download Abhinav Chaurasia's professional resume.",
 };
 
-const PDF_PATH = "/resume.pdf";
+const PDF_PATH = "/AbhinavChaurasia_Resume.pdf";
 
 export default function ResumePage() {
   return (
@@ -25,7 +25,7 @@ export default function ResumePage() {
         <div className="rp-actions">
           <a
             href={PDF_PATH}
-            download="resume.pdf"
+            download="AbhinavChaurasia_Resume.pdf"
             className="rp-download-btn"
             aria-label="Download resume as PDF"
           >

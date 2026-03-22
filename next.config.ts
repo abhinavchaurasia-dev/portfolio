@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/((?!resume\\.pdf$).*)",
+        source: "/((?!AbhinavChaurasia_Resume\\.pdf$).*)",
         headers: [
           /* Prevent MIME sniffing */
           { key: "X-Content-Type-Options",    value: "nosniff"          },
@@ -74,6 +74,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https:",
               "media-src 'self'",
               "connect-src 'self' https://api.openai.com https://openrouter.ai https://*.upstash.io wss://*.upstash.io",
+              "frame-src 'self' https://docs.google.com https://drive.google.com",
               "frame-ancestors 'none'",
               "object-src 'self'",
               "base-uri 'self'",
@@ -93,11 +94,11 @@ const nextConfig: NextConfig = {
       },
       /* Allow PDF to be embedded via <object> on the same origin */
       {
-        source: "/resume.pdf",
+        source: "/AbhinavChaurasia_Resume.pdf",
         headers: [
           { key: "X-Frame-Options",       value: "SAMEORIGIN"                    },
           { key: "Content-Type",          value: "application/pdf"               },
-          { key: "Content-Disposition",   value: "inline; filename=\"resume.pdf\"" },
+          { key: "Content-Disposition",   value: "inline; filename=\"AbhinavChaurasia_Resume.pdf\"" },
           {
             key: "Content-Security-Policy",
             value: [

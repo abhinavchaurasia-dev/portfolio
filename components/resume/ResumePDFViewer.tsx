@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { ExternalLink } from "lucide-react";
+import { resumeConfig } from "../../lib/resume";
 
-const PDF_PATH = "/resume.pdf";
+const PDF_PATH = "/AbhinavChaurasia_Resume.pdf";
 
 export default function ResumePDFViewer() {
+  const [showFallback, setShowFallback] = useState(false);
+
   return (
     <div className="rp-card">
-      {/* Open in new tab */}
       <a
         href={PDF_PATH}
         target="_blank"
@@ -19,18 +22,17 @@ export default function ResumePDFViewer() {
         <ExternalLink size={14} strokeWidth={1.5} aria-hidden="true" />
       </a>
 
-      {/* Iframe is more reliable than <object> on mobile browsers. */}
       <iframe
-        src={`${PDF_PATH}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
+        src={resumeConfig.url}
         className="rp-frame"
-        title="Abhinav Chaurasia Resume"
+        title="Abhinav Chaurasia Resume Preview"
+        loading="lazy"
+        onLoad={() => setShowFallback(false)}
+        onError={() => setShowFallback(true)}
       />
 
-      <div className="rp-fallback" role="status" aria-live="polite">
-        <p className="rp-fallback-text">
-          If the inline preview does not load on your browser, open the resume directly.
-        </p>
-        <div className="rp-fallback-actions">
+      {showFallback ? (
+        <div className="rp-fallback" role="status" aria-live="polite">
           <a
             href={PDF_PATH}
             target="_blank"
@@ -39,39 +41,24 @@ export default function ResumePDFViewer() {
           >
             Open resume
           </a>
-          <a href={PDF_PATH} download="resume.pdf" className="rp-fallback-link">
-            Download PDF
-          </a>
         </div>
-      </div>
+      ) : null}
 
       <style>{`
         .rp-frame {
           display: block;
           width: 100%;
-          height: 700px;
+          min-height: 900px;
           border: none;
+          background: #111;
         }
         .rp-fallback {
           border-top: 1px solid var(--color-border-subtle, #1F1F1F);
-          padding: 14px 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .rp-fallback-text {
-          margin: 0;
-          font-family: var(--font-geist, "Geist", sans-serif);
-          font-size: 13px;
-          color: var(--color-text-secondary, #888888);
-        }
-        .rp-fallback-actions {
+          padding: 10px 12px;
           display: inline-flex;
           align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
+          justify-content: flex-end;
+          width: 100%;
         }
         .rp-fallback-link {
           font-family: var(--font-geist, "Geist", sans-serif);
@@ -87,21 +74,18 @@ export default function ResumePDFViewer() {
           border-color: var(--color-border-strong, #3A3A3A);
         }
         @media (max-width: 767px) {
-          .rp-frame { height: 65vh; min-height: 420px; }
-          .rp-fallback {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          .rp-fallback-actions {
-            width: 100%;
+          .rp-frame {
+            min-height: 76vh;
           }
           .rp-fallback-link {
-            flex: 1;
+            width: 100%;
             text-align: center;
           }
         }
         @media (prefers-reduced-motion: reduce) {
-          .rp-fallback-link { transition: none; }
+          .rp-fallback-link {
+            transition: none;
+          }
         }
       `}</style>
     </div>
