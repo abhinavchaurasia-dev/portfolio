@@ -48,9 +48,14 @@ export default function ResumePDFViewer() {
         .rp-frame {
           display: block;
           width: 100%;
-          min-height: 900px;
+          height: clamp(900px, 86vh, 1160px);
           border: none;
           background: #111;
+        }
+        @media (max-width: 1024px) {
+          .rp-frame {
+            height: clamp(680px, 80vh, 960px);
+          }
         }
         .rp-fallback {
           border-top: 1px solid var(--color-border-subtle, #1F1F1F);
@@ -75,7 +80,7 @@ export default function ResumePDFViewer() {
         }
         @media (max-width: 767px) {
           .rp-frame {
-            min-height: 76vh;
+            height: clamp(380px, 55vh, 520px);
           }
           .rp-fallback-link {
             width: 100%;

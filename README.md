@@ -394,6 +394,7 @@ Create `.env.local` and define the variables below.
 | `UPSTASH_REDIS_REST_URL` | Yes | Upstash Redis REST URL for read/write visitor metrics. Get from [Upstash Console](https://console.upstash.com). |
 | `UPSTASH_REDIS_REST_TOKEN` | Yes | Upstash Redis REST token for authentication. Get from [Upstash Console](https://console.upstash.com). |
 | `NEXT_PUBLIC_SITE_URL` | Yes | Public canonical URL used in metadata generation and absolute social image links. Example: `https://abhinavchaurasia.in`. |
+| `NEXT_PUBLIC_RESUME_EMBED_URL` | Yes | Public iframe preview URL for the Resume page. Example: `https://drive.google.com/file/d/<FILE_ID>/preview`. |
 | `SPOTIFY_CLIENT_ID` | Optional | Spotify app client ID for currently-playing integration. Get from [Spotify Developer Dashboard](https://developer.spotify.com/dashboard). |
 | `SPOTIFY_CLIENT_SECRET` | Optional | Spotify app client secret for access token refresh flow. Get from [Spotify Developer Dashboard](https://developer.spotify.com/dashboard). |
 | `SPOTIFY_REFRESH_TOKEN` | Optional | Spotify OAuth refresh token for server-side currently-playing API calls. Generated during Spotify OAuth authorization flow. |
@@ -406,6 +407,7 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
 UPSTASH_REDIS_REST_URL=https://example.upstash.io
 UPSTASH_REDIS_REST_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxx
 NEXT_PUBLIC_SITE_URL=https://abhinavchaurasia.in
+NEXT_PUBLIC_RESUME_EMBED_URL=https://drive.google.com/file/d/<FILE_ID>/preview
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
 SPOTIFY_REFRESH_TOKEN=
@@ -423,6 +425,7 @@ Operational guidance:
 
 - Missing `OPENAI_API_KEY` disables assistant functionality.
 - Missing Upstash variables disables visitor counter functionality.
+- Missing `NEXT_PUBLIC_RESUME_EMBED_URL` disables embedded resume preview.
 - Missing Spotify variables disables currently-playing integration only.
 - Missing `ADMIN_SECRET_KEY` should block all admin-protected routes by design.
 
