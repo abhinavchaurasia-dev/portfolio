@@ -10,7 +10,7 @@ import { Copy, Check, ArrowUpRight } from "lucide-react";
    ============================================================ */
 
 const EMAIL    = "abhinavc037@gmail.com";
-const LINKEDIN = "https://linkedin.com/in/abhinavchaurasia-dev";
+const LINKEDIN = "https://www.linkedin.com/in/abhinavchaurasia-dev/";
 const REVERT_MS = 2000;
 
 export default function ContactLine() {

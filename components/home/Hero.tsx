@@ -56,6 +56,16 @@ function MediumIcon() {
   );
 }
 
+function HashnodeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 2.75 20.5 7.875v8.25L12 21.25 3.5 16.125v-8.25L12 2.75z" />
+      <path d="M12 9v6" />
+      <path d="M9 12h6" />
+    </svg>
+  );
+}
+
 /* ============================================================
    ANIMATION VARIANTS
    ============================================================ */
@@ -137,39 +147,45 @@ export default function Hero() {
 
   const socialLinks: SocialLink[] = [
     {
+      label: "LinkedIn",
+      href: "https://www.linkedin.com/in/abhinavchaurasia-dev/",
+      icon: <Linkedin size={15} strokeWidth={1.5} aria-hidden="true" />,
+      newTab: true,
+    },
+    {
       label: "GitHub",
       href: "https://github.com/abhinavchaurasia-dev",
       icon: <Github size={15} strokeWidth={1.5} aria-hidden="true" />,
       newTab: true,
     },
     {
-      label: "LinkedIn",
-      href: "https://linkedin.com/in/abhinavchaurasia-dev",
-      icon: <Linkedin size={15} strokeWidth={1.5} aria-hidden="true" />,
-      newTab: true,
-    },
-    {
       label: "Twitter",
-      href: "https://twitter.com/abhinavchaurasia",
+      href: "https://x.com/abhinavc_dev",
       icon: <TwitterIcon />,
       newTab: true,
     },
     {
       label: "YouTube",
-      href: "https://youtube.com/@abhinavchaurasia",
+      href: "https://www.youtube.com/@AbhinavChaurasia22",
       icon: <YouTubeIcon />,
       newTab: true,
     },
     {
       label: "Instagram",
-      href: "https://instagram.com/abhinavchaurasia",
+      href: "https://www.instagram.com/abhinavc_dev/",
       icon: <InstagramIcon />,
       newTab: true,
     },
     {
       label: "Medium",
-      href: "https://medium.com/@abhinavchaurasia",
+      href: "https://medium.com/@abhinavchaurasia-dev",
       icon: <MediumIcon />,
+      newTab: true,
+    },
+    {
+      label: "Hashnode",
+      href: "https://hashnode.com/@abhinavchaurasia-dev",
+      icon: <HashnodeIcon />,
       newTab: true,
     },
     {
@@ -357,10 +373,9 @@ export default function Hero() {
         </Link>
       </div>
 
-      {/* ── ROW 8: Icon-only socials — no Email ── */}
+      {/* ── ROW 8: Icon-only socials ── */}
       <nav className="hero-social" aria-label="Social links">
         {socialLinks
-          .filter(s => s.label !== "Email")
           .map(({ label, href, icon, newTab }) => (
             <a
               key={label}

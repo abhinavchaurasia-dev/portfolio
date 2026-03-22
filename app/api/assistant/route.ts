@@ -80,8 +80,13 @@ Role:          Full-Stack Engineer · AI Integrations
 Location:      Lucknow, Uttar Pradesh, India
 Education:     B.Tech Computer Science, University of Lucknow, Expected graduation: 2026
 Email:         abhinavc037@gmail.com
+LinkedIn:      www.linkedin.com/in/abhinavchaurasia-dev/
 GitHub:        github.com/abhinavchaurasia-dev
-LinkedIn:      linkedin.com/in/abhinavchaurasia-dev
+Twitter:       x.com/abhinavc_dev
+YouTube:       www.youtube.com/@AbhinavChaurasia22
+Instagram:     www.instagram.com/abhinavc_dev/
+Medium:        medium.com/@abhinavchaurasia-dev
+Hashnode:      hashnode.com/@abhinavchaurasia-dev
 Portfolio:     abhinavchaurasia.in
 Availability:  Open to SWE internships and 2026 graduate roles across India
 

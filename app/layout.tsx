@@ -145,8 +145,13 @@ const personJsonLd = {
   description: "Final-year CSE student building full-stack systems with AI integrations.",
   email:       "abhinavc037@gmail.com",
   sameAs: [
+    "https://www.linkedin.com/in/abhinavchaurasia-dev/",
     "https://github.com/abhinavchaurasia-dev",
-    "https://linkedin.com/in/abhinavchaurasia-dev",
+    "https://x.com/abhinavc_dev",
+    "https://www.youtube.com/@AbhinavChaurasia22",
+    "https://www.instagram.com/abhinavc_dev/",
+    "https://medium.com/@abhinavchaurasia-dev",
+    "https://hashnode.com/@abhinavchaurasia-dev",
   ],
   alumniOf: {
     "@type": "CollegeOrUniversity",
