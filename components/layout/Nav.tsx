@@ -51,6 +51,7 @@ export default function Nav() {
   const [drawerOpen, setDrawerOpen]   = useState(false);
   const drawerRef                     = useRef<HTMLDivElement>(null);
   const hamburgerRef                  = useRef<HTMLButtonElement>(null);
+  const prevPathnameRef               = useRef(pathname);
 
   /* Apply theme to <html> data-theme attribute */
   useEffect(() => {
@@ -58,12 +59,15 @@ export default function Nav() {
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
-  /* Close drawer on route change */
+  /* Close drawer only when route actually changes */
   useEffect(() => {
-    if (!drawerOpen) return;
-    const id = requestAnimationFrame(() => setDrawerOpen(false));
-    return () => cancelAnimationFrame(id);
-  }, [pathname, drawerOpen]);
+    if (prevPathnameRef.current !== pathname) {
+      const id = requestAnimationFrame(() => setDrawerOpen(false));
+      prevPathnameRef.current = pathname;
+      return () => cancelAnimationFrame(id);
+    }
+    prevPathnameRef.current = pathname;
+  }, [pathname]);
 
   /* Close drawer on outside click */
   useEffect(() => {
@@ -181,7 +185,6 @@ export default function Nav() {
               className="nav-hamburger"
               onClick={() => setDrawerOpen((prev) => !prev)}
               aria-label={drawerOpen ? "Close menu" : "Open menu"}
-              aria-expanded={drawerOpen ? "true" : "false"}
               aria-controls="mobile-drawer"
             >
               {drawerOpen ? (
