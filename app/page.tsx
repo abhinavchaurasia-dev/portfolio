@@ -152,7 +152,7 @@ export default function HomePage() {
       <SectionReveal delay={0.05}>
         <section
           aria-label="Engineering approach"
-          style={{ marginTop: "64px", maxWidth: "560px" }}
+          style={{ marginTop: "64px" }}
         >
           <span className="home-mono-label home-approach-label">approach</span>
           <p className="home-approach-p1">

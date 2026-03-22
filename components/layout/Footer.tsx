@@ -96,10 +96,10 @@ export default function Footer() {
         }
 
         .ft-inner {
-          max-width: 720px;
+          max-width: var(--layout-max-width, 960px);
           width: 100%;
           margin-inline: auto;
-          padding-inline: clamp(24px, 5vw, 80px);
+          padding-inline: var(--layout-side-padding, clamp(20px, 4vw, 64px));
         }
 
         /* ── Top: two columns ── */

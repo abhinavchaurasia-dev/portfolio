@@ -261,13 +261,13 @@ export default function Nav() {
           border-bottom-color: color-mix(in srgb, #E0E0E0 60%, transparent);
         }
 
-        /* --- Nav inner — 720px column, mirrors .page-wrapper --- */
+        /* --- Nav inner — mirrors global .page-wrapper rail --- */
         .nav-inner {
           height: 100%;
-          max-width: 720px;
+          max-width: var(--layout-max-width, 960px);
           width: 100%;
           margin-inline: auto;
-          padding-inline: clamp(24px, 5vw, 80px);
+          padding-inline: var(--layout-side-padding, clamp(20px, 4vw, 64px));
           display: flex;
           align-items: center;
           justify-content: space-between;

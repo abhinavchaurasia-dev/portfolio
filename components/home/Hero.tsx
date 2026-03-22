@@ -513,7 +513,7 @@ export default function Hero() {
           color: var(--color-text-secondary, #888888);
           line-height: 1.65;
           margin: 0 0 20px;
-          max-width: 520px;
+          max-width: 760px;
         }
 
         /* ── Row 6: Info grid ── */

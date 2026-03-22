@@ -362,7 +362,7 @@ export default async function PostPage({
         .post {
           padding-top: 48px;
           padding-bottom: 96px;
-          max-width: 680px;
+          max-width: var(--layout-max-width, 1120px);
         }
 
         /* ── Top bar ── */

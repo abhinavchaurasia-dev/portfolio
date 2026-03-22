@@ -177,7 +177,7 @@ export default function CaseStudyLayout({
       {/* ── STYLES ── */}
       <style>{`
         .cs {
-          max-width: 720px;
+          max-width: var(--layout-max-width, 1120px);
           margin: 0 auto;
           padding: 48px 0 96px;
         }

@@ -4,7 +4,7 @@ import FooterQuote from "@/components/shared/FooterQuote";
 /* ============================================================
    PageWrapper
    
-   Constrains content to a 720px column, centered.
+  Constrains content to the shared global layout rail, centered.
    Horizontal padding scales with viewport via CSS clamp(),
    defined in globals.css as .page-wrapper.
    ============================================================ */
