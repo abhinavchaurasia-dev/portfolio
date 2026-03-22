@@ -3,6 +3,21 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Github, ExternalLink, ArrowRight } from "lucide-react";
+import {
+  SiDjango,
+  SiExpress,
+  SiGooglemaps,
+  SiGooglegemini,
+  SiMui,
+  SiNodedotjs,
+  SiOpenai,
+  SiPostgresql,
+  SiPython,
+  SiReact,
+  SiTypescript,
+} from "react-icons/si";
+import { RiImageAiLine, RiRobot2Line } from "react-icons/ri";
+import type { IconType } from "react-icons";
 
 /* ============================================================
    TYPES
@@ -43,24 +58,28 @@ const STATUS_CFG = {
   BUILDING:   { dot: "#FFB84A", text: "#FFB84A", label: "In Development"          },
 } as const;
 
-const ICON_MAP: Record<string, { src: string; label: string }> = {
-  "react":       { src: "https://cdn.simpleicons.org/react/61DAFB",      label: "React"      },
-  "django":      { src: "https://cdn.simpleicons.org/django/44B78B",     label: "Django"     },
-  "postgresql":  { src: "https://cdn.simpleicons.org/postgresql/4169E1", label: "PostgreSQL" },
-  "postgres":    { src: "https://cdn.simpleicons.org/postgresql/4169E1", label: "PostgreSQL" },
-  "node.js":     { src: "https://cdn.simpleicons.org/nodedotjs/339933",  label: "Node.js"    },
-  "nodejs":      { src: "https://cdn.simpleicons.org/nodedotjs/339933",  label: "Node.js"    },
-  "express":     { src: "https://cdn.simpleicons.org/express/ffffff",    label: "Express"    },
-  "openai":      { src: "https://cdn.simpleicons.org/openai/ffffff",     label: "OpenAI"     },
-  "clip":        { src: "https://cdn.simpleicons.org/openai/ffffff",     label: "CLIP"       },
-  "gpt-4o-mini": { src: "https://cdn.simpleicons.org/openai/ffffff",     label: "GPT-4o"     },
-  "python":      { src: "https://cdn.simpleicons.org/python/3776AB",     label: "Python"     },
-  "typescript":  { src: "https://cdn.simpleicons.org/typescript/3178C6", label: "TypeScript" },
-  "gemini ai":   { src: "https://cdn.simpleicons.org/google/4285F4",     label: "Gemini AI"  },
-  "gps api":     { src: "https://cdn.simpleicons.org/googlemaps/4285F4", label: "GPS API"    },
-  "vader":       { src: "https://cdn.simpleicons.org/python/3776AB",     label: "VADER"      },
-  "deepseek":    { src: "https://cdn.simpleicons.org/python/3776AB",     label: "DeepSeek"   },
-  "mui":         { src: "https://cdn.simpleicons.org/mui/007FFF",        label: "MUI"        },
+type TechIcon = {
+  label: string;
+  color: string;
+  Icon: IconType;
+};
+
+const ICON_MAP: Record<string, TechIcon> = {
+  "react":       { Icon: SiReact,        label: "React",      color: "#61DAFB" },
+  "django":      { Icon: SiDjango,       label: "Django",     color: "#44B78B" },
+  "postgresql":  { Icon: SiPostgresql,   label: "PostgreSQL", color: "#4169E1" },
+  "postgres":    { Icon: SiPostgresql,   label: "PostgreSQL", color: "#4169E1" },
+  "node.js":     { Icon: SiNodedotjs,    label: "Node.js",    color: "#339933" },
+  "nodejs":      { Icon: SiNodedotjs,    label: "Node.js",    color: "#339933" },
+  "express":     { Icon: SiExpress,      label: "Express",    color: "#FFFFFF" },
+  "openai":      { Icon: SiOpenai,       label: "OpenAI",     color: "#FFFFFF" },
+  "clip":        { Icon: RiImageAiLine,  label: "CLIP",       color: "#FFFFFF" },
+  "gpt-4o-mini": { Icon: RiRobot2Line,   label: "GPT-4o",     color: "#FFFFFF" },
+  "python":      { Icon: SiPython,       label: "Python",     color: "#3776AB" },
+  "typescript":  { Icon: SiTypescript,   label: "TypeScript", color: "#3178C6" },
+  "gemini ai":   { Icon: SiGooglegemini, label: "Gemini AI",  color: "#4285F4" },
+  "gps api":     { Icon: SiGooglemaps,   label: "GPS API",    color: "#4285F4" },
+  "mui":         { Icon: SiMui,          label: "MUI",        color: "#007FFF" },
 };
 
 /* ============================================================
@@ -165,16 +184,14 @@ export default function ProjectCard({
           {iconsToShow.map((tag) => {
             const icon = ICON_MAP[tag.toLowerCase()];
             return icon ? (
-              <Image
+              <span
                 key={tag}
-                src={icon.src}
-                alt={icon.label}
+                className="pc-tech-icon-wrap"
                 title={icon.label}
-                width={20}
-                height={20}
-                className="pc-tech-icon"
-                unoptimized
-              />
+                aria-label={icon.label}
+              >
+                <icon.Icon size={20} className="pc-tech-icon" color={icon.color} aria-hidden="true" />
+              </span>
             ) : (
               <span key={tag} className="pc-tech-pill">{tag}</span>
             );
@@ -388,10 +405,19 @@ export default function ProjectCard({
         .pc-tech-icon {
           width: 20px;
           height: 20px;
-          object-fit: contain;
           opacity: 0.8;
           flex-shrink: 0;
+          display: block;
           filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        }
+
+        .pc-tech-icon-wrap {
+          width: 20px;
+          height: 20px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
         }
 
         .pc-tech-pill {
