@@ -40,14 +40,14 @@ Audience intent:
 - For recruiters: quick proof of shipped systems, role scope, and technical ownership.
 - For engineers: implementation depth through ADRs, architecture notes, and integration details.
 
-Projects showcased in the portfolio:
+Work and projects showcased in the portfolio:
 
-| Project | Status | Stack Snapshot |
+| Item | Context | Stack Snapshot |
 | --- | --- | --- |
-| Northern Railway Portal | PRODUCTION | Node.js, Express, PostgreSQL, React, MUI |
-| PeerCampus | SHIPPED | React, Django, PostgreSQL, CLIP, GPT-4o-mini |
-| CivicBridge | SHIPPED | React, Django, Gemini AI, GPS API |
-| SentiGenix | SHIPPED | React, Django, VADER NLP, DeepSeek API |
+| Northern Railway Portal | Internship project (Northern Railway) | Node.js, Express, PostgreSQL, React, MUI |
+| PeerCampus | Personal project (SHIPPED) | React, Django, PostgreSQL, CLIP, GPT-4o-mini |
+| CivicBridge | Personal project (SHIPPED) | React, Django, Gemini AI, GPS API |
+| SentiGenix | Personal project (SHIPPED) | React, Django, VADER NLP, DeepSeek API |
 
 What these project sections emphasize:
 
