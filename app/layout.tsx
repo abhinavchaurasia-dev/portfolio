@@ -101,8 +101,8 @@ export const metadata: Metadata = {
 
   twitter: {
     card:        "summary_large_image",
-    site:        "@abhinavcdev",
-    creator:     "@abhinavcdev",
+    site:        "@abhinavc_dev",
+    creator:     "@abhinavc_dev",
     title:       "Abhinav Chaurasia · Full-Stack Engineer",
     description: "Full-Stack Engineer · AI Integrations. React, Django, Node.js, PostgreSQL.",
     images:      ["/og-image.png"],
